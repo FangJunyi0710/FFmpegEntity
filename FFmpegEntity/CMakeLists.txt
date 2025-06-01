@@ -41,16 +41,22 @@ target_include_directories(FFmpegEntity PUBLIC
 	Basic
 )
 
-# 链接到 FFmpeg 库
-target_link_libraries(FFmpegEntity PRIVATE
-	/lib/x86_64-linux-gnu/libavcodec.so
-	/lib/x86_64-linux-gnu/libavfilter.so
-	/lib/x86_64-linux-gnu/libavutil.so
-	/lib/x86_64-linux-gnu/libswscale.so
-	/lib/x86_64-linux-gnu/libavdevice.so
-	/lib/x86_64-linux-gnu/libavformat.so
-	/lib/x86_64-linux-gnu/libswresample.so
+# 查找 pkg-config
+find_package(PkgConfig REQUIRED)
+
+# 通过 pkg-config 获取 FFmpeg 的编译和链接参数
+pkg_check_modules(FFMPEG REQUIRED IMPORTED_TARGET
+    libavcodec
+    libavformat
+    libavutil
+    libswscale
+    libavfilter
+    libavdevice
+    libswresample
 )
+
+# 链接时直接使用 PkgConfig 生成的接口
+target_link_libraries(FFmpegEntity PRIVATE PkgConfig::FFMPEG)
 
 # 在 CMakeLists.txt 中添加 Sanitizers
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")

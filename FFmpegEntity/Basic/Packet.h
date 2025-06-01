@@ -21,9 +21,13 @@ public:
 			m_data=av_packet_alloc();
 		}
 	}
-	CLONE(clone,Packet,Packet*)
-	AVPacket* data()const;
-	void unref()const;
+    CLONE(clone,Packet,Packet*)
+    void unref()const;
+
+    AVPacket* operator*(){return m_data;}
+    const AVPacket* operator*()const{return m_data;}
+    AVPacket* operator->(){return m_data;}
+    const AVPacket* operator->()const{return m_data;}
 };
 
 }

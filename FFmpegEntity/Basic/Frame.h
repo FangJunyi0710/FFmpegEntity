@@ -25,8 +25,12 @@ public:
 		}
 	}
 	CLONE(clone,Frame,Frame*)
-	void unref()const;
-	AVFrame* data()const {return m_data;}
+    void unref()const;
+
+    AVFrame* operator*(){return m_data;}
+    const AVFrame* operator*()const{return m_data;}
+    AVFrame* operator->(){return m_data;}
+    const AVFrame* operator->()const{return m_data;}
 };
 
 class VideoFrame{

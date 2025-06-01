@@ -9,5 +9,5 @@ set(SOURCES
     main.cpp
 )
 
-add_executable(VideoGenerate main.cpp)
+add_executable(VideoGenerate ${SOURCES})
 target_link_libraries(VideoGenerate PRIVATE FFmpegEntity)

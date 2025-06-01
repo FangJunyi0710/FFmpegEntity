@@ -23,8 +23,8 @@ AVInput::AVInput(string url){
 		streams[type].timeBase=context->streams[i]->time_base;
 	}
 	Packet packet;
-	while(!av_read_frame(context, packet.data())) {
-		streams[context->streams[packet.data()->stream_index]->codecpar->codec_type].packets.push_back(packet);
+    while(!av_read_frame(context, *packet)) {
+        streams[context->streams[packet->stream_index]->codecpar->codec_type].packets.push_back(packet);
 		packet.unref();
 	}
 	avformat_close_input(&context);

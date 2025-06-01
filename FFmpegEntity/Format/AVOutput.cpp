@@ -51,10 +51,10 @@ void AVOutput::flush(){
 		buffer.insert(buffer.end(),tmp.begin(),tmp.end());
 	}
 	sort(buffer.begin(),buffer.end(),[=](const Packet& a,const Packet& b){
-		return a.data()->dts<b.data()->dts;
+        return a->dts<b->dts;
 	});
 	for(auto each:buffer){
-		av_interleaved_write_frame(context,each.data());
+        av_interleaved_write_frame(context,*each);
 	}
 }
 void AVOutput::close(){

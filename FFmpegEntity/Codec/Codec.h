@@ -28,7 +28,7 @@ void set(AVDictionary*& options,const std::map<string,string>& opts);
  *     调用后不能再调用 send()
  * 
  */
-template<class fromT,class toT,int(*send_)(AVCodecContext*,const typename std::decay<decltype(*fromT().data())>::type*),int(*receive_)(AVCodecContext*,decltype(toT().data()))>
+template<class fromT,class toT,int(*send_)(AVCodecContext*,const typename std::decay<decltype(**fromT())>::type*),int(*receive_)(AVCodecContext*,decltype(*toT()))>
 class Codec{
 	deque<toT> outputBuffer;
 protected:

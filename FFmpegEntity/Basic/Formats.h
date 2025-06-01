@@ -63,9 +63,9 @@ public:
 	SWAP(SwResample){
 		std::swap(context,o.context);
 	}
-	COPY(SwResample)=delete;
-	void send(const uint8_t*const* in,int count)const;
-	int receive(uint8_t*const* out,int count)const;
+    COPY(SwResample)=delete;
+    void send(const uint8_t*const* in,int count)const;
+    int receive(uint8_t*const* out,int count)const;
 	int samplesCount()const;
 };
 

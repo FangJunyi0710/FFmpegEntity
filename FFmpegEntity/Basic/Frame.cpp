@@ -13,11 +13,11 @@ void Frame::unref()const{
 
 VideoFrame::VideoFrame():VideoFrame(0,0){}
 VideoFrame::VideoFrame(int width,int height,Color color):data(height,RGBALine(width,color)){}
-VideoFrame::VideoFrame(my_ffmpeg::Frame frame):VideoFrame(frame.data()->width,frame.data()->height){
+VideoFrame::VideoFrame(my_ffmpeg::Frame frame):VideoFrame(frame->width,frame->height){
 	frame=my_ffmpeg::Swscale(frame,{width(),height(),AV_PIX_FMT_RGBA64}).scale(frame);
 	for(int i=0;i<height();++i){
 		for(int j=0;j<width();++j){
-			const uint16_t* pixel=reinterpret_cast<const uint16_t*>(frame.data()->data[0]+(frame.data()->linesize[0]*i+4*sizeof(uint16_t)*j));
+            const uint16_t* pixel=reinterpret_cast<const uint16_t*>(frame->data[0]+(frame->linesize[0]*i+4*sizeof(uint16_t)*j));
 			data[i][j]=Color(pixel[0],pixel[1],pixel[2],pixel[3]);
 		}
 	}
@@ -38,12 +38,12 @@ my_ffmpeg::VideoFormat VideoFrame::format()const{
 }
 my_ffmpeg::Frame VideoFrame::toFrame()const{
 	my_ffmpeg::Frame ret;
-	ret.data()->width=width();
-	ret.data()->height=height();
-	ret.data()->format=AV_PIX_FMT_RGBA64;
-	av_frame_get_buffer(ret.data(),0);
+    ret->width=width();
+    ret->height=height();
+    ret->format=AV_PIX_FMT_RGBA64;
+    av_frame_get_buffer(*ret,0);
 	for(int i=0;i<height();++i){
-		memcpy(ret.data()->data[0]+ret.data()->linesize[0]*i,data[i].data(),width()*sizeof(Color));
+        memcpy(ret->data[0]+ret->linesize[0]*i,data[i].data(),width()*sizeof(Color));
 	}
 	return ret;
 }
@@ -77,7 +77,7 @@ void AudioBuffer::push(const vector<my_ffmpeg::Frame>& frames){
 			flushConverter();
 			converter.swap(my_ffmpeg::SwResample(frame,m_format));
 		}
-		converter.send(frame.data()->data,frame.data()->nb_samples);
+        converter.send(frame->data,frame->nb_samples);
 	}
 }
 int AudioBuffer::size()const{
@@ -101,15 +101,15 @@ my_ffmpeg::Frame AudioBuffer::pop(int frameSize){
 		flushConverter();
 	}
 	my_ffmpeg::Frame ret;
-	ret.data()->ch_layout=m_format.channelLayout;
-	ret.data()->sample_rate=m_format.sampleRate;
-	ret.data()->format=m_format.sampleFormat;
-	ret.data()->nb_samples=frameSize;
-	av_frame_get_buffer(ret.data(),0);
+    ret->ch_layout=m_format.channelLayout;
+    ret->sample_rate=m_format.sampleRate;
+    ret->format=m_format.sampleFormat;
+    ret->nb_samples=frameSize;
+    av_frame_get_buffer(*ret,0);
 	for(int i=0;i<m_format.channelLayout.nb_channels;++i){
 		for(int j=0;j<frameSize;++j){
 			for(int k=0;k<sampleBytes();++k){
-				ret.data()->data[i][j*sampleBytes()+k]=data[i].front()[k];
+                ret->data[i][j*sampleBytes()+k]=data[i].front()[k];
 			}
 			data[i].pop_front();
 		}
