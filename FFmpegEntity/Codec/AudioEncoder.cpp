@@ -1,6 +1,6 @@
 #include "AudioEncoder.h"
 
-namespace my_ffmpeg{
+namespace myFFmpeg{
 
 double AudioEncoder::step()const{
 	return context->frame_size*1.0/context->sample_rate;

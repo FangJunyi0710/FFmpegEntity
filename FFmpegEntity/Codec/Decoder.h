@@ -2,7 +2,7 @@
 
 #include "Codec.h"
 
-namespace my_ffmpeg{
+namespace myFFmpeg{
 
 class Decoder:public BasicDecoder{
 public:

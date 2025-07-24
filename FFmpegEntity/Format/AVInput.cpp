@@ -2,7 +2,7 @@
 #include <cassert>
 #include <iostream>
 
-namespace my_ffmpeg{
+namespace myFFmpeg{
 
 AVRational AVInput::getTimeBase(AVMediaType type)const{
 	return streams[type].timeBase;

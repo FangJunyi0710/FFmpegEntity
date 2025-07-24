@@ -8,7 +8,7 @@ extern "C"{
 #include <libavcodec/avcodec.h>
 }
 
-namespace my_ffmpeg{
+namespace myFFmpeg{
 
 double operator*(int64_t tick,AVRational timeBase);
 double operator*(AVRational timeBase,int64_t tick);

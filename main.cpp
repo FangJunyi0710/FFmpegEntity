@@ -1,6 +1,88 @@
+#include "AVInput.h"
+#include "AVOutput.h"
+#include "VideoEncoder.h"
+#include "AudioEncoder.h"
+#include <functional>
 #include <iostream>
+#include <memory>
 using namespace std;
-int main(){
+using namespace myFFmpeg;
 
-    return 0;
+class AbstractLayer{
+protected:
+	virtual void generate(VideoFrame& frame,double tick)=0;
+	virtual double mapTick(double tick){
+		return tick;
+	}
+public:
+	void produce(VideoFrame& frame,double tick){
+		generate(frame,mapTick(tick));
+	}
+	virtual ~AbstractLayer()=default;
+};
+class Layer:public AbstractLayer{
+	function<void(VideoFrame&,double)> gen;
+	function<double(double)> map;
+public:
+	void generate(VideoFrame& frame,double tick)override{
+		return gen(frame,tick);
+	}
+	double mapTick(double tick)override{
+		return map(tick);
+	}
+	Layer(function<void(VideoFrame&,double)> gen_,function<double(double)> map_=[](double x){return x;}):gen(gen_),map(map_){}
+	void bindGenerator(function<void(VideoFrame&,double)> newGen){
+		gen=newGen;
+	}
+	void bindMapper(function<double(double)> newMap){
+		map=newMap;
+	}
+};
+
+int main(){
+	AVOutput output("out/output.mp4", {new VideoEncoder({1920, 1080, AV_PIX_FMT_YUV420P},AV_CODEC_ID_H264,30,300000,{{"preset","medium"}})}); // 创建输出对象，指定文件名、分辨率和帧率
+	vector<unique_ptr<AbstractLayer>> layer;
+	layer.push_back(make_unique<Layer>([](VideoFrame &frame, double )
+	{
+		for(int i=0;i<1920;++i){
+			for(int j=0;j<1080;++j){
+				if(i<960 && j<540){
+					frame.pixel(i,j)=Color(Color::max,0,0,Color::max);
+				}
+				if(i>=960 && j<540){
+					frame.pixel(i,j)=Color(0,Color::max,0,Color::max);
+				}
+				if(i<960 && j>=540){
+					frame.pixel(i,j)=Color(Color::max,Color::max,Color::max,Color::max);
+				}
+				if(i>=960 && j>=540){
+					frame.pixel(i,j)=Color(0,0,Color::max,Color::max);
+				}
+			}
+		}
+	},
+	[](double x)
+	{
+		return x;
+	}));
+	const int len=1;
+	for(int i=0;i<30*len;++i){
+		if(i%30==0){
+			clog<<i/30<<endl;
+		}
+		VideoFrame frame(1920,1080,Color());
+		for(int j=0;j<(int)layer.size();++j){
+			layer[j]->produce(frame,i/30.0);
+		}
+
+		clog<<"from main frame: "<<frame.pixel(0,0)<<" "<<frame.pixel(1919,0)<<" "<<frame.pixel(0,1079)<<" "<<frame.pixel(1919,1079)<<endl;
+		AVOutput tmpout(string("out/tmp") + to_string(i) + ".png", {new VideoEncoder({1920, 1080, AV_PIX_FMT_RGBA}, AV_CODEC_ID_PNG)});
+		tmpout.encode(AVMEDIA_TYPE_VIDEO, {frame.toFrame()});
+		tmpout.close();
+
+		output.encode(AVMEDIA_TYPE_VIDEO, {frame.toFrame()});
+	}
+	output.flush();
+
+	return 0;
 }

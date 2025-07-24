@@ -4,7 +4,7 @@
 #include <cassert>
 #include <iostream>
 
-namespace my_ffmpeg{
+namespace myFFmpeg{
 
 void set(AVDictionary*& options,const std::map<std::string,std::string>& opts){
 	for(const auto& [key,value]:opts){

@@ -1,15 +1,21 @@
 #include "Color.h"
 #include <iostream>
 
-std::ostream& std::operator<<(std::ostream& out,const my_ffmpeg::Color& c){
-	return out<<"RGBA64("<<c.red()<<","<<c.green()<<","<<c.blue()<<","<<c.alpha()<<")";
+std::ostream& std::operator<<(std::ostream& out,const myFFmpeg::Color& c){
+	return out<<"RGBA("<<myFFmpeg::Color::RGBA(c.red())<<","<<myFFmpeg::Color::RGBA(c.green())<<","<<myFFmpeg::Color::RGBA(c.blue())<<","<<myFFmpeg::Color::RGBA(c.alpha())<<")";
 }
 
-namespace my_ffmpeg{
+namespace myFFmpeg{
+
+#if AV_HAVE_BIGENDIAN
+AVPixelFormat Color::PIX_FMT=AV_PIX_FMT_RGBA;
+#else
+AVPixelFormat Color::PIX_FMT=AV_PIX_FMT_ABGR;
+#endif
 
 Color operator+(const Color& a,const Color& b){
-	uint aalpha=a.alpha();
-	uint balpha=b.alpha()*ushort(0xffff-aalpha)/0xffff;
+	Color::RGBA aalpha=a.alpha();
+	Color::RGBA balpha=b.alpha()*Color::T(Color::max-aalpha)/Color::max;
 	if(aalpha+balpha==0){
 		return Color();
 	}

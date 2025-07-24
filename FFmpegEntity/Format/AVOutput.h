@@ -4,7 +4,7 @@
 #include "AVFormat.h"
 #include <array>
 
-namespace my_ffmpeg{
+namespace myFFmpeg{
 
 class AVOutput:public AVFormat{
 	std::array<Encoder*,AVMEDIA_TYPE_NB> encoders={nullptr};

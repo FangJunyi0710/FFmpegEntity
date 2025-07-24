@@ -2,7 +2,7 @@
 #include <array>
 #include <cassert>
 
-namespace my_ffmpeg{
+namespace myFFmpeg{
 
 AVOutput::AVOutput(string filename,const vector<Encoder*>& arg_encoders){
 	for(auto& each:arg_encoders){
@@ -58,11 +58,16 @@ void AVOutput::flush(){
 	}
 }
 void AVOutput::close(){
+	bool hasEncoder=false;
 	for(const auto& each:encoders){
 		if(!each){
 			continue;
 		}
 		each->end();
+		hasEncoder=true;
+	}
+	if(!hasEncoder){
+		return;
 	}
 	flush();
 	av_write_trailer(context);

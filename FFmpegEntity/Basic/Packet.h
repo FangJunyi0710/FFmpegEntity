@@ -6,7 +6,7 @@ extern "C"{
 #include <libavformat/avformat.h>
 }
 
-namespace my_ffmpeg{
+namespace myFFmpeg{
 
 class Packet{
 	AVPacket* m_data=nullptr;
@@ -19,6 +19,9 @@ public:
 	COPY(Packet):m_data(av_packet_clone(o.m_data)){
 		if(!m_data){
 			m_data=av_packet_alloc();
+		}
+		if(!m_data){
+			throw MemoryError("Failed to allocate AVPacket");
 		}
 	}
     CLONE(clone,Packet,Packet*)

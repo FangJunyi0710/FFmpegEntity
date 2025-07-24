@@ -5,7 +5,7 @@
 #include <string>
 #include <stdexcept>
 
-namespace my_ffmpeg{
+namespace myFFmpeg{
 
 template<class T>
 T lim(const T& a,const T& min,const T& max){
@@ -42,9 +42,19 @@ public:
 	FileError(const string& error):FFmpegError(error){}
 };
 
-class CodecError:public FFmpegError{
+class ConvertError:public FFmpegError{
 public:
-	CodecError(const string& error):FFmpegError(error){}
+	ConvertError(const string& error):FFmpegError(error){}
+};
+
+class CodecError:public ConvertError{
+public:
+	CodecError(const string& error):ConvertError(error){}
+};
+
+class MemoryError:public FFmpegError,std::bad_alloc{
+public:
+	MemoryError(const string& error):FFmpegError(error){}
 };
 
 }
@@ -64,3 +74,4 @@ using std::vector;
 	void swap(T&& o)noexcept{swap(o);}\
 	T& operator=(T&& o)noexcept{swap(o);return *this;} \
 	void swap(T& o)noexcept
+	

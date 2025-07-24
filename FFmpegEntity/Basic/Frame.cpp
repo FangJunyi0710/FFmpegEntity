@@ -1,81 +1,145 @@
 #include "Frame.h"
+#include "Basic.h"
 #include <cassert>
+#include <memory>
+#include <iostream>
 
-namespace my_ffmpeg{
+namespace myFFmpeg{
 
-Frame::Frame():m_data(av_frame_alloc()){}
+using std::min;
+
+Frame::Frame():m_data(av_frame_alloc()){
+	if(!m_data){
+		throw MemoryError("Failed to allocate frame");
+	}
+}
 Frame::~Frame()noexcept{
-	av_frame_free(&m_data);
+	if(m_data) {
+		av_frame_free(&m_data);
+	}
 }
 void Frame::unref()const{
 	av_frame_unref(m_data);
 }
 
-VideoFrame::VideoFrame():VideoFrame(0,0){}
-VideoFrame::VideoFrame(int width,int height,Color color):data(height,RGBALine(width,color)){}
-VideoFrame::VideoFrame(my_ffmpeg::Frame frame):VideoFrame(frame->width,frame->height){
-	frame=my_ffmpeg::Swscale(frame,{width(),height(),AV_PIX_FMT_RGBA64}).scale(frame);
-	for(int i=0;i<height();++i){
-		for(int j=0;j<width();++j){
-            const uint16_t* pixel=reinterpret_cast<const uint16_t*>(frame->data[0]+(frame->linesize[0]*i+4*sizeof(uint16_t)*j));
-			data[i][j]=Color(pixel[0],pixel[1],pixel[2],pixel[3]);
+VideoFrame::VideoFrame():m_width(0),m_height(0),data(nullptr){}
+VideoFrame::VideoFrame(int width,int height,const Color& color):
+	m_width(std::max(0,width)),
+	m_height(std::max(0,height)),
+	data(m_width*m_height>0 ? reinterpret_cast<Color*>(new Color::RGBA[m_width*m_height]) : nullptr)
+{
+	if(data){
+		// 直接填充内存，避免多次调用Color构造函数
+		std::fill_n(reinterpret_cast<Color::RGBA*>(data.get()), m_width*m_height, color.rgba);
+	}
+}
+
+VideoFrame::VideoFrame(myFFmpeg::Frame frame):
+	m_width(frame->width),
+	m_height(frame->height),
+	data(m_width*m_height>0 ? new Color[m_width*m_height] : nullptr)
+{
+	if(!data) return;
+	
+	frame=myFFmpeg::Swscale(frame,{m_width,m_height,Color::PIX_FMT}).scale(frame);
+	
+	for(int i=0;i<m_height;++i){
+		for(int j=0;j<m_width;++j){
+			const Color::T* pixel=reinterpret_cast<const Color::T*>(
+				frame->data[0]+frame->linesize[0]*i+4*sizeof(Color::T)*j);
+			data[i*m_width+j]=Color(pixel[0],pixel[1],pixel[2],pixel[3]);
 		}
 	}
 }
+
 void VideoFrame::clear(){
-	*this=VideoFrame();
+	m_width = 0;
+	m_height = 0;
+	data.reset();
 }
 void VideoFrame::setWidth(int w){
-	for(auto& line:data){
-		line.resize(w);
+	w = max(0, w);
+	if(w == m_width) return;
+	
+	auto newData = w*m_height > 0 ? new Color[w*m_height] : nullptr;
+	if(newData && data){
+		for(int i=0; i<min(m_height, m_height); ++i){
+			for(int j=0; j<min(m_width, w); ++j){
+				newData[i*w + j] = data[i*m_width + j];
+			}
+		}
 	}
+	data.reset(newData);
+	m_width = w;
 }
+
 void VideoFrame::setHeight(int h){
-	data.resize(h);
+	h = max(0, h);
+	if(h == m_height) return;
+	
+	auto newData = m_width*h > 0 ? new Color[m_width*h] : nullptr;
+	if(newData && data){
+		memcpy(newData, data.get(), m_width*min(m_height, h)*sizeof(Color));
+	}
+	data.reset(newData);
+	m_height = h;
 }
-my_ffmpeg::VideoFormat VideoFrame::format()const{
-	return {width(),height(),AV_PIX_FMT_RGBA64};
+
+myFFmpeg::VideoFormat VideoFrame::format()const{
+	return {m_width, m_height, Color::PIX_FMT};
 }
-my_ffmpeg::Frame VideoFrame::toFrame()const{
-	my_ffmpeg::Frame ret;
-    ret->width=width();
-    ret->height=height();
-    ret->format=AV_PIX_FMT_RGBA64;
-    av_frame_get_buffer(*ret,0);
-	for(int i=0;i<height();++i){
-        memcpy(ret->data[0]+ret->linesize[0]*i,data[i].data(),width()*sizeof(Color));
+
+myFFmpeg::Frame VideoFrame::toFrame()const{
+	myFFmpeg::Frame ret;
+	ret->width = m_width;
+	ret->height = m_height;
+	ret->format = Color::PIX_FMT;
+	
+	if(av_frame_get_buffer(*ret, 0) < 0){
+		throw MemoryError("Failed to allocate frame buffer");
+	}
+	
+	if(data){
+		for(int i=0; i<m_height; ++i){
+			memcpy(ret->data[0] + ret->linesize[0]*i, 
+				  &data[i*m_width], 
+				  min(static_cast<size_t>(ret->linesize[0]), m_width*sizeof(Color)));
+		}
 	}
 	return ret;
 }
-my_ffmpeg::Frame VideoFrame::toFrame(my_ffmpeg::VideoFormat resFormat)const{
-	return my_ffmpeg::Swscale(format(),resFormat).scale(toFrame());
+myFFmpeg::Frame VideoFrame::toFrame(myFFmpeg::VideoFormat resFormat)const{
+	return myFFmpeg::Swscale(format(),resFormat).scale(toFrame());
 }
 
 void AudioBuffer::flushConverter(){
-	uint8_t** buf=new uint8_t*[m_format.channelLayout.nb_channels];
-	int len=converter.samplesCount();
-	for(int i=0;i<m_format.channelLayout.nb_channels;++i){
-		buf[i]=new uint8_t[len*sampleBytes()];
-	}
-	converter.receive(buf,len);
-	for(int i=0;i<m_format.channelLayout.nb_channels;++i){
-		for(int j=0;j<len;++j){
-			data[i].push_back(vector<uint8_t>(buf[i]+j*sampleBytes(),buf[i]+(j+1)*sampleBytes()));
-		}
-		delete[] buf[i];
-	}
-	delete[] buf;
+    std::vector<std::unique_ptr<uint8_t[]>> buffers;
+    std::unique_ptr<uint8_t*[]> buf(new uint8_t*[m_format.channelLayout.nb_channels]);
+    
+    int len=converter.samplesCount();
+    for(int i=0;i<m_format.channelLayout.nb_channels;++i){
+        buffers.emplace_back(new uint8_t[len*sampleBytes()]);
+        buf[i] = buffers.back().get();
+    }
+    
+    converter.receive(buf.get(), len);
+    
+    for(int i=0;i<m_format.channelLayout.nb_channels;++i){
+        for(int j=0;j<len;++j){
+            data[i].push_back(vector<uint8_t>(buf[i]+j*sampleBytes(), buf[i]+(j+1)*sampleBytes()));
+        }
+    }
 }
-AudioBuffer::AudioBuffer(my_ffmpeg::AudioFormat fmt):
+AudioBuffer::AudioBuffer(myFFmpeg::AudioFormat fmt):
 	m_format(fmt),data(m_format.channelLayout.nb_channels),curFormat(m_format),converter(curFormat,m_format){}
-void AudioBuffer::push(const vector<my_ffmpeg::Frame>& frames){
+void AudioBuffer::push(const vector<myFFmpeg::Frame>& frames){
 	for(const auto& frame:frames){
 		if(AudioFormat(frame).sampleFormat==-1){
 			continue;
 		}
 		if(frame!=curFormat){
 			flushConverter();
-			converter.swap(my_ffmpeg::SwResample(frame,m_format));
+			converter.swap(myFFmpeg::SwResample(frame,m_format));
 		}
         converter.send(frame->data,frame->nb_samples);
 	}
@@ -86,13 +150,13 @@ int AudioBuffer::size()const{
 	}
 	return data[0].size()+converter.samplesCount();
 }
-my_ffmpeg::AudioFormat AudioBuffer::format()const{
+myFFmpeg::AudioFormat AudioBuffer::format()const{
 	return m_format;
 }
 int AudioBuffer::sampleBytes()const{
 	return av_get_bytes_per_sample(m_format.sampleFormat);
 }
-my_ffmpeg::Frame AudioBuffer::pop(int frameSize){
+myFFmpeg::Frame AudioBuffer::pop(int frameSize){
 	frameSize=std::min(size(),frameSize);
 	if(frameSize==0){
 		return Frame();
@@ -100,12 +164,14 @@ my_ffmpeg::Frame AudioBuffer::pop(int frameSize){
 	if(int(data[0].size())<frameSize){
 		flushConverter();
 	}
-	my_ffmpeg::Frame ret;
+	myFFmpeg::Frame ret;
     ret->ch_layout=m_format.channelLayout;
     ret->sample_rate=m_format.sampleRate;
     ret->format=m_format.sampleFormat;
     ret->nb_samples=frameSize;
-    av_frame_get_buffer(*ret,0);
+    if(av_frame_get_buffer(*ret,0)<0){
+		throw MemoryError("Failed to allocate frame buffer");
+	}
 	for(int i=0;i<m_format.channelLayout.nb_channels;++i){
 		for(int j=0;j<frameSize;++j){
 			for(int k=0;k<sampleBytes();++k){
@@ -116,18 +182,18 @@ my_ffmpeg::Frame AudioBuffer::pop(int frameSize){
 	}
 	return ret;
 }
-vector<my_ffmpeg::Frame> AudioBuffer::pop(int frameSize,int count){
-	vector<my_ffmpeg::Frame> ret;
+vector<myFFmpeg::Frame> AudioBuffer::pop(int frameSize,int count){
+	vector<myFFmpeg::Frame> ret;
 	for(int i=0;i<count;++i){
 		ret.push_back(pop(frameSize));
 	}
 	return ret;
 }
-vector<my_ffmpeg::Frame> AudioBuffer::flush(int frameSize){
+vector<myFFmpeg::Frame> AudioBuffer::flush(int frameSize){
 	if(frameSize==0){
 		frameSize=1024;
 	}
-	vector<my_ffmpeg::Frame> ret;
+	vector<myFFmpeg::Frame> ret;
 	while(size()>=frameSize){
 		ret.push_back(pop(frameSize));
 	}

@@ -1,9 +1,14 @@
 #include "Packet.h"
+#include "Basic.h"
 #include <cassert>
 
-namespace my_ffmpeg{
+namespace myFFmpeg{
 
-Packet::Packet():m_data(av_packet_alloc()){}
+Packet::Packet():m_data(av_packet_alloc()){
+    if(!m_data){
+        throw MemoryError("Failed to allocate packet");
+    }
+}
 Packet::~Packet()noexcept{
 	av_packet_free(&m_data);
 }

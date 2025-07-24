@@ -4,7 +4,7 @@
 #include "AVFormat.h"
 #include <array>
 
-namespace my_ffmpeg{
+namespace myFFmpeg{
 
 class AVInput:public AVFormat{
 	struct Stream{

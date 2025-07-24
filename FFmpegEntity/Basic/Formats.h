@@ -2,12 +2,7 @@
 
 #include "Color.h"
 
-extern "C"{
-#include <libswscale/swscale.h>
-#include <libswresample/swresample.h>
-}
-
-namespace my_ffmpeg{
+namespace myFFmpeg{
 
 class Frame;
 

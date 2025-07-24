@@ -58,6 +58,9 @@ pkg_check_modules(FFMPEG REQUIRED IMPORTED_TARGET
 # 链接时直接使用 PkgConfig 生成的接口
 target_link_libraries(FFmpegEntity PRIVATE PkgConfig::FFMPEG)
 
+# 添加编译选项
+target_compile_options(FFmpegEntity PRIVATE -Wall -Werror -Wextra)
+
 # 在 CMakeLists.txt 中添加 Sanitizers
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_compile_options(-fsanitize=address,undefined)

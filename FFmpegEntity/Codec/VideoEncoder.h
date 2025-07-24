@@ -2,7 +2,7 @@
 
 #include "Encoder.h"
 
-namespace my_ffmpeg{
+namespace myFFmpeg{
 
 class VideoEncoder:public Encoder{
 	class Handler;

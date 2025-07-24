@@ -1,6 +1,6 @@
 #include "Encoder.h"
 
-namespace my_ffmpeg{
+namespace myFFmpeg{
 
 void Encoder::setpts(vector<Frame>& source){
 	for(auto& each:source){

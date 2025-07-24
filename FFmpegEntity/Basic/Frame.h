@@ -2,12 +2,13 @@
 
 #include "Formats.h"
 #include <deque>
+#include <memory>
 
 extern "C"{
 #include <libavformat/avformat.h>
 }
 
-namespace my_ffmpeg{
+namespace myFFmpeg{
 
 using std::deque;
 
@@ -23,6 +24,9 @@ public:
 		if(!m_data){
 			m_data=av_frame_alloc();
 		}
+		if(!m_data){
+			throw MemoryError("Failed to allocate AVFrame");
+		}
 	}
 	CLONE(clone,Frame,Frame*)
     void unref()const;
@@ -34,22 +38,34 @@ public:
 };
 
 class VideoFrame{
-	using RGBALine=std::vector<Color>;
-	using RGBABuffer=std::vector<RGBALine>;
-	RGBABuffer data;
+	int m_width = 0;
+	int m_height = 0;
+	std::unique_ptr<Color[]> data;
 public:
+	SWAP(VideoFrame){
+		std::swap(m_width,o.m_width);
+		std::swap(m_height,o.m_height);
+		std::swap(data,o.data);
+	}
+	COPY(VideoFrame) : VideoFrame(o.m_width,o.m_height){
+		memcpy(data.get(), o.data.get(), m_width * m_height * sizeof(Color));
+	}
+	CLONE(clone, VideoFrame, VideoFrame *)
+
 	VideoFrame();
-	VideoFrame(int width,int height,Color color=Color());
+	VideoFrame(int width,int height,const Color& color=Color());
 	VideoFrame(Frame frame);
 	void clear();
-	int width()const {return data.empty()?0:data[0].size();}
-	int height()const {return data.size();}
-	bool empty()const {return !height() && !width();}
+	int width()const {return m_width;}
+	int height()const {return m_height;}
+	bool empty()const {return !m_width || !m_height;}
 	void setWidth(int w);
 	void setHeight(int h);
-	RGBALine& operator[](int h) {return data[h];}
-	const RGBALine& operator[](int h)const {return data[h];}
-	VideoFormat format()const;
+	
+	Color &pixel(int w, int h) { return data[h * m_width + w]; }
+	const Color &pixel(int w, int h) const { return data[h * m_width + w]; }
+
+	VideoFormat format() const;
 	Frame toFrame()const;
 	Frame toFrame(VideoFormat resFormat)const;
 };

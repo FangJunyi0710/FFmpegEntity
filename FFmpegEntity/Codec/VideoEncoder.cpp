@@ -4,7 +4,9 @@
 #include <thread>
 #include <atomic>
 
-namespace my_ffmpeg {
+namespace myFFmpeg {
+
+using std::min;
 
 class VideoEncoder::Handler {
 	std::mutex lock;
@@ -37,7 +39,6 @@ public:
 					locker.lock();
 					converted.push_back(res);
 					--working;
-					// std::cerr<<c033::pGreen<<"convert buffer.size()="<<buffer.size()<<c033::pNone<<"\n";
 				}
 			});
 		}
@@ -52,9 +53,6 @@ public:
 			buffer.push_back(i);
 		}
 
-		// std::cerr<<c033::pRed<<"push buffer.size()="<<buffer.size()<<c033::pNone<<"\n";
-		// std::cerr<<c033::pYellow<<"converting = "<<working<<c033::pNone<<"\n";
-
         if(buffer.size() >= std::thread::hardware_concurrency()) {
 			condition.notify_all();
         } else {
@@ -63,19 +61,16 @@ public:
 	}
     vector<Frame> pop() {
 		std::lock_guard<std::mutex> locker(lock);
-		// std::cerr<<c033::pRed<<"pop(): buffer.size()="<<buffer.size()<<" converted.size()="<<converted.size()<<c033::pNone<<"\n";
-        auto ret = converted;
+       auto ret = converted;
 		converted.clear();
 		return ret;
 	}
     vector<Frame> flush() {
-		// std::cerr<<c033::pPurple<<"flushing"<<c033::pNone<<"\n";
 		while(!buffer.empty() || working);
 		return pop();
 	}
     ~Handler() {
-		// std::cerr<<"~Handler(): buffer.size()="<<buffer.size()<<" converted.size()="<<converted.size()<<"\n";
-        stop = true;
+       stop = true;
 		condition.notify_all();
         for(auto& t : th) {
 			t.join();
@@ -100,10 +95,12 @@ VideoEncoder::VideoEncoder(VideoFormat format, AVCodecID id, int fps_, int64_t b
 	context->height = format.height;
 
 	context->gop_size = fps;   // I帧间隔
-    context->max_b_frames = context->gop_size - 1; // B帧 ( I BBB P BBB P BBB P BBB P BBB I )
+    context->max_b_frames = 4; // B帧 ( I BBB P BBB P BBB P BBB P BBB I )
 
     context->time_base = {1, fps};
     context->framerate = {fps, 1};
+
+	
 }
 VideoEncoder::~VideoEncoder()noexcept {
 	delete handler;
