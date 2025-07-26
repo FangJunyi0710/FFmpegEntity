@@ -40,17 +40,18 @@ public:
 class VideoFrame{
 	int m_width = 0;
 	int m_height = 0;
-	std::unique_ptr<Color[]> data;
+	Color* m_data;
 public:
 	SWAP(VideoFrame){
 		std::swap(m_width,o.m_width);
 		std::swap(m_height,o.m_height);
-		std::swap(data,o.data);
+		std::swap(m_data,o.m_data);
 	}
 	COPY(VideoFrame) : VideoFrame(o.m_width,o.m_height){
-		memcpy(data.get(), o.data.get(), m_width * m_height * sizeof(Color));
+		memcpy(m_data, o.m_data, m_width * m_height * sizeof(Color));
 	}
 	CLONE(clone, VideoFrame, VideoFrame *)
+	~VideoFrame()noexcept{delete[] m_data;}
 
 	VideoFrame();
 	VideoFrame(int width,int height,const Color& color=Color());
@@ -62,8 +63,10 @@ public:
 	void setWidth(int w);
 	void setHeight(int h);
 	
-	Color &pixel(int w, int h) { return data[h * m_width + w]; }
-	const Color &pixel(int w, int h) const { return data[h * m_width + w]; }
+	Color &pixel(int w, int h) { return m_data[h * m_width + w]; }
+	const Color &pixel(int w, int h) const { return m_data[h * m_width + w]; }
+	Color* data(){return m_data;}
+	const Color* data()const{return m_data;}
 
 	VideoFormat format() const;
 	Frame toFrame()const;

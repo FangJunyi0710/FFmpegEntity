@@ -12,7 +12,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # 添加编译选项
-add_compile_options(-Wall -Werror -Wextra -g)
+add_compile_options(-Wall -Werror -Wextra -Ofast -DNDEBUG)
 
 # 查找Qt (支持Qt5和Qt6)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Widgets Gui)

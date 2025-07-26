@@ -40,23 +40,28 @@ public:
 };
 
 int main(){
-	AVOutput output("out/output.mp4", {new VideoEncoder({1920, 1080, AV_PIX_FMT_YUV420P},AV_CODEC_ID_H264,30,300000,{{"preset","medium"}})}); // 创建输出对象，指定文件名、分辨率和帧率
+	AVOutput output("out/output.mp4", {new VideoEncoder({1920, 1080, AV_PIX_FMT_YUV420P},AV_CODEC_ID_H264,30,300000,{{"preset","ultrafast"}})}); // 创建输出对象，指定文件名、分辨率和帧率
 	vector<unique_ptr<AbstractLayer>> layer;
-	layer.push_back(make_unique<Layer>([](VideoFrame &frame, double )
+	layer.push_back(make_unique<Layer>([](VideoFrame &frame, double t)
 	{
+		int x=(t-floor(t/1)*1)*Color::max;
+		Color color1(x, 0, 0, x);
+		Color color2(0, x, 0, x);
+		Color color3(x, x, x, x);
+		Color color4(0, 0, x, x);
 		for(int i=0;i<1920;++i){
 			for(int j=0;j<1080;++j){
 				if(i<960 && j<540){
-					frame.pixel(i,j)=Color(Color::max,0,0,Color::max);
+					frame.pixel(i,j)=color1;
 				}
 				if(i>=960 && j<540){
-					frame.pixel(i,j)=Color(0,Color::max,0,Color::max);
+					frame.pixel(i,j)=color2;
 				}
 				if(i<960 && j>=540){
-					frame.pixel(i,j)=Color(Color::max,Color::max,Color::max,Color::max);
+					frame.pixel(i,j)=color3;
 				}
 				if(i>=960 && j>=540){
-					frame.pixel(i,j)=Color(0,0,Color::max,Color::max);
+					frame.pixel(i,j)=color4;
 				}
 			}
 		}
@@ -65,7 +70,7 @@ int main(){
 	{
 		return x;
 	}));
-	const int len=1;
+	const int len=10;
 	for(int i=0;i<30*len;++i){
 		if(i%30==0){
 			clog<<i/30<<endl;
@@ -75,10 +80,10 @@ int main(){
 			layer[j]->produce(frame,i/30.0);
 		}
 
-		clog<<"from main frame: "<<frame.pixel(0,0)<<" "<<frame.pixel(1919,0)<<" "<<frame.pixel(0,1079)<<" "<<frame.pixel(1919,1079)<<endl;
-		AVOutput tmpout(string("out/tmp") + to_string(i) + ".png", {new VideoEncoder({1920, 1080, AV_PIX_FMT_RGBA}, AV_CODEC_ID_PNG)});
-		tmpout.encode(AVMEDIA_TYPE_VIDEO, {frame.toFrame()});
-		tmpout.close();
+		// clog<<"from main frame: "<<frame.pixel(0,0)<<" "<<frame.pixel(1919,0)<<" "<<frame.pixel(0,1079)<<" "<<frame.pixel(1919,1079)<<endl;
+		// AVOutput tmpout(string("out/tmp") + to_string(i) + ".png", {new VideoEncoder({1920, 1080, AV_PIX_FMT_RGBA}, AV_CODEC_ID_PNG)});
+		// tmpout.encode(AVMEDIA_TYPE_VIDEO, {frame.toFrame()});
+		// tmpout.close();
 
 		output.encode(AVMEDIA_TYPE_VIDEO, {frame.toFrame()});
 	}

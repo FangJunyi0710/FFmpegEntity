@@ -35,3 +35,4 @@ build
 *.user
 .vscode
 out/
+perf.data*
