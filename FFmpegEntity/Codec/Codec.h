@@ -25,7 +25,7 @@ void set(AVDictionary*& options,const std::map<string,string>& opts);
  *     取出缓冲区 ==> aftertreat()
  *   end():
  *     flushBuffer() 清空子类缓冲区 ==> send_(nullptr) 清空AVCodec内部缓冲区 ==> receive_() 进入缓冲区
- *     调用后不能再调用 send()
+ *     调用后不能再调用 send(), 应调用 receive() 取出剩余缓冲区的内容
  * 
  */
 template<class fromT,class toT,int(*send_)(AVCodecContext*,const typename std::decay<decltype(**fromT())>::type*),int(*receive_)(AVCodecContext*,decltype(*toT()))>

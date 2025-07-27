@@ -142,7 +142,7 @@ void AudioBuffer::push(const vector<myFFmpeg::Frame>& frames){
 		}
 		if(frame!=curFormat){
 			flushConverter();
-			converter.swap(myFFmpeg::SwResample(frame,m_format));
+			converter=myFFmpeg::SwResample(frame,m_format);
 		}
         converter.send(frame->data,frame->nb_samples);
 	}

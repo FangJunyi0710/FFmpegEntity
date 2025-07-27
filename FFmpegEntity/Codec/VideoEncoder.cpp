@@ -11,30 +11,30 @@ using std::min;
 class VideoEncoder::Handler {
 	std::mutex lock;
 	std::condition_variable condition;
-    bool stop = false;
+	bool stop = false;
 	vector<std::thread> th;
-    std::atomic<int> working = 0;
+	std::atomic<int> working = 0;
 
 	deque<Frame> buffer;
 	vector<Frame> converted;
 	VideoFormat outputFormat;
 public:
-    Handler(VideoFormat oFormat): outputFormat(oFormat) {
-        th = vector<std::thread>(std::thread::hardware_concurrency());
-        for(auto& t : th) {
-            t = std::thread([&]() {
-                while(!stop) {
+	Handler(VideoFormat oFormat): outputFormat(oFormat) {
+		th = vector<std::thread>(std::thread::hardware_concurrency());
+		for(auto& t : th) {
+			t = std::thread([&]() {
+				while(!stop) {
 					std::unique_lock<std::mutex> locker(lock);
-                    condition.wait(locker, [ = ]() {return !buffer.empty() || stop;});
-                    if(stop) {
+					condition.wait(locker, [ = ]() {return !buffer.empty() || stop;});
+					if(stop) {
 						break;
 					}
-                    auto cur = buffer[0];
+					auto cur = buffer[0];
 					++working;
 					buffer.pop_front();
 					locker.unlock();
 
-                    auto res = Swscale(cur, outputFormat).scale(cur);
+					auto res = Swscale(cur, outputFormat).scale(cur);
 
 					locker.lock();
 					converted.push_back(res);
@@ -43,43 +43,43 @@ public:
 			});
 		}
 	}
-    void push(const vector<Frame>& source) {
+	void push(const vector<Frame>& source) {
 		std::lock_guard<std::mutex> locker(lock);
-        for(const auto& i : source) {
-            if(i == outputFormat) {
+		for(const auto& i : source) {
+			if(i == outputFormat) {
 				converted.push_back(i);
 				continue;
 			}
 			buffer.push_back(i);
 		}
 
-        if(buffer.size() >= std::thread::hardware_concurrency()) {
+		if(buffer.size() >= std::thread::hardware_concurrency()) {
 			condition.notify_all();
-        } else {
+		} else {
 			condition.notify_one();
 		}
 	}
-    vector<Frame> pop() {
+	vector<Frame> pop() {
 		std::lock_guard<std::mutex> locker(lock);
-       auto ret = converted;
+	   auto ret = converted;
 		converted.clear();
 		return ret;
 	}
-    vector<Frame> flush() {
-		while(!buffer.empty() || working);
+	vector<Frame> flush() {
+		while(working || !buffer.empty());
 		return pop();
 	}
-    ~Handler() {
-       stop = true;
+	~Handler() {
+		stop = true;
 		condition.notify_all();
-        for(auto& t : th) {
+		for(auto& t : th) {
 			t.join();
 		}
 	}
 };
 
 double VideoEncoder::step()const {
-    return 1.0 / fps;
+	return 1.0 / fps;
 }
 vector<Frame> VideoEncoder::convertFormat(const vector<Frame>& source) {
 	handler->push(source);
@@ -95,10 +95,10 @@ VideoEncoder::VideoEncoder(VideoFormat format, AVCodecID id, int fps_, int64_t b
 	context->height = format.height;
 
 	context->gop_size = fps;   // I帧间隔
-    context->max_b_frames = 4; // B帧 ( I BBB P BBB P BBB P BBB P BBB I )
+	context->max_b_frames = 4; // B帧 ( I BBB P BBB P BBB P BBB P BBB I )
 
-    context->time_base = {1, fps};
-    context->framerate = {fps, 1};
+	context->time_base = {1, fps};
+	context->framerate = {fps, 1};
 
 	
 }

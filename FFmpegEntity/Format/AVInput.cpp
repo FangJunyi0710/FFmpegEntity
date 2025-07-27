@@ -19,7 +19,7 @@ AVInput::AVInput(string url){
 	}
 	for(u_int i=0;i<context->nb_streams;++i){
 		auto type=context->streams[i]->codecpar->codec_type;
-		streams[type].decoder.swap(Decoder(context->streams[i]));
+		streams[type].decoder=Decoder(context->streams[i]);
 		streams[type].timeBase=context->streams[i]->time_base;
 	}
 	Packet packet;
@@ -28,6 +28,11 @@ AVInput::AVInput(string url){
 		packet.unref();
 	}
 	avformat_close_input(&context);
+}
+
+void AVInput::open(string url){
+	AVInput tmp(url);
+	swap(tmp);
 }
 
 void AVInput::Stream::pushBuffer(const vector<Frame>& frames){

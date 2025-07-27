@@ -14,30 +14,39 @@ class Color;
 Color operator+(const Color& a,const Color& b);
 
 class Color{
+	// Ensure consistent RGBA order regardless of byte order
+	enum Shifts {
+#if AV_HAVE_BIGENDIAN
+		RedShift = 48,
+		GreenShift = 32,
+		BlueShift = 16,
+		AlphaShift = 0
+#else // little endian:
+		RedShift = 0,
+		GreenShift = 16,
+		BlueShift = 32,
+		AlphaShift = 48
+#endif
+	};
 public:
-	using RGBA=uint;
-	using T = u_char;
+	using RGBA=ull;
+	using T = ushort;
 
-	static const u_char max = 0xff;
-	uint rgba = 0x000000ff;
-	Color(uint rgba_ = 0x000000ff) : rgba(rgba_) {}
-	Color(u_char r, u_char g, u_char b, u_char a = max) : rgba((uint(r) << 24) | (uint(g) << 16) | (uint(b) << 8) | a) {}
+	static const T max = 0xffff;
+	RGBA rgba;
+	Color(RGBA rgba_ = 0x000000ff) : rgba(rgba_) {}
+	Color(T r, T g, T b, T a = max) : rgba((RGBA(r) << RedShift) | (RGBA(g) << GreenShift) | (RGBA(b) << BlueShift) | (RGBA(a) << AlphaShift)) {}
 	Color &operator+=(const Color &o) { return *this = *this + o; }
-	u_char red() const { return (rgba >> 24) & 0xff; }
-	u_char green() const { return (rgba >> 16) & 0xff; }
-	u_char blue() const { return (rgba >> 8) & 0xff; }
-	u_char alpha() const { return rgba & 0xff; }
-	void setRed(u_char r) { rgba = (rgba & 0x00ffffff) | (uint(r) << 24); }
-	void setGreen(u_char g) { rgba = (rgba & 0xff00ffff) | (uint(g) << 16); }
-	void setBlue(u_char b) { rgba = (rgba & 0xffff00ff) | (uint(b) << 8); }
-	void setAlpha(u_char a) { rgba = (rgba & 0xffffff00) | a; }
+	T red() const { return (rgba >> RedShift) & max; }
+	T green() const { return (rgba >> GreenShift) & max; }
+	T blue() const { return (rgba >> BlueShift) & max; }
+	T alpha() const { return (rgba >> AlphaShift) & max; }
+	void setRed(T r) { rgba = (rgba & (~RGBA() ^ (RGBA(max) << RedShift))) | (RGBA(r) << RedShift); }
+	void setGreen(T g) { rgba = (rgba & (~RGBA() ^ (RGBA(max) << GreenShift))) | (RGBA(g) << GreenShift); }
+	void setBlue(T b) { rgba = (rgba & (~RGBA() ^ (RGBA(max) << BlueShift))) | (RGBA(b) << BlueShift); }
+	void setAlpha(T a) { rgba = (rgba & (~RGBA() ^ (RGBA(max) << AlphaShift))) | (RGBA(a) << AlphaShift); }
 	static AVPixelFormat PIX_FMT;
 };
-
-template<class W>
-Color avg(Color a,Color b,W wa){
-	return Color(avg(a.rgba,b.rgba,wa));
-}
 
 }
 

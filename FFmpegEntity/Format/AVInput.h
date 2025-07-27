@@ -29,6 +29,7 @@ public:
 	AVRational getTimeBase(AVMediaType type)const;
 	vector<Frame> read(AVMediaType type,int maxCount=-1);
 	AVInput(string url="");
+	void open(string url);
 	SWAP(AVInput){
 		AVFormat::swap(o);
 		for(uint i=0;i<streams.size();++i){
