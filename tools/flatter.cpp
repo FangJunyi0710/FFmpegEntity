@@ -12,9 +12,12 @@
 #include <QLineEdit>
 #include <QDateTime>
 #include <QSpinBox>
+#include <QFile>
+#include "AVOutput.h"
+#include "VideoEncoder.h"
 
 class GraphicsView : public QGraphicsView {
-    Q_OBJECT
+	Q_OBJECT
 public:
 	GraphicsView(QWidget *parent = nullptr) : QGraphicsView(parent), isDragging(false) {
 		setDragMode(QGraphicsView::ScrollHandDrag);
@@ -27,6 +30,7 @@ public:
 signals:
 	void mouseMoved(QPointF position);
 	void mouseClicked(QPointF position);
+	void rightClicked(QPointF position);
 protected:
 	bool isDragging;
 	void wheelEvent(QWheelEvent *event) override {
@@ -55,7 +59,11 @@ protected:
 		if (!isDragging) {
 			// 获取点击位置并发出点击信号
 			QPointF scenePos = mapToScene(event->pos());
-			emit mouseClicked(scenePos);
+			if (event->button() == Qt::RightButton) {
+				emit rightClicked(scenePos);
+			} else {
+				emit mouseClicked(scenePos);
+			}
 		}
 		// 重置拖动状态
 		isDragging = false;
@@ -65,29 +73,32 @@ protected:
 
 class MainWindow : public QWidget {
 public:
-	MainWindow(QWidget *parent = nullptr) : QWidget(parent) {
+	MainWindow(QWidget *parent = nullptr) : QWidget(parent){
 		setupUI();
 		connectSignals();
+		setIndex();
 	}
-	
+
 protected:
 	QLineEdit *pathLabel;
 	QLabel *coordLabel;
 	GraphicsView *graphicsView;
 	QGraphicsScene *scene;
-	QVector<QPointF> clickPoints;
+	QVector<QPointF> clickHistory;
+	QVector<QPointF> currentClick;
 	QVector<QGraphicsRectItem*> rects;
 	QSpinBox *widthSpinBox,*heightSpinBox;
 	QPixmap pixmap;
+	int index=0;
 	void setupUI(){
 		// 设置窗口标题
 		setWindowTitle("Flatter");
 		
 		// 创建布局
-		QVBoxLayout *mainLayout = new QVBoxLayout(this);
+		QVBoxLayout *mainLayout = new QVBoxLayout;
 		setLayout(mainLayout);
 
-		QHBoxLayout *topLayout = new QHBoxLayout(this);
+		QHBoxLayout *topLayout = new QHBoxLayout;
 		mainLayout->addLayout(topLayout);
 
 		// 添加图片路径
@@ -122,10 +133,18 @@ protected:
 		connect(pathLabel,&QLineEdit::returnPressed,this,&MainWindow::loadImage);
 		connect(graphicsView,&GraphicsView::mouseMoved,this,&MainWindow::updateCoord);
 		connect(graphicsView,&GraphicsView::mouseClicked,this,&MainWindow::handleClick);
+		connect(graphicsView,&GraphicsView::rightClicked,this,&MainWindow::handleRightClick);
 	}
 	void loadImage(){
-		pixmap.load(pathLabel->text());
-		if (!pixmap.isNull()) {
+		QPixmap tmp;
+		tmp.load(pathLabel->text());
+		if (!tmp.isNull()) {
+			pixmap=tmp;
+
+			scene->clear();
+			clickHistory.clear();
+			currentClick.clear();
+			rects.clear();
 			scene->addPixmap(pixmap);
 			scene->setSceneRect(pixmap.rect());
 		}
@@ -134,18 +153,73 @@ protected:
 		coordLabel->setText(QString("鼠标坐标: (%1, %2)").arg(QString::number(position.x()), QString::number(position.y())));
 	}
 	void handleClick(QPointF position) {
-		clickPoints.append(position);
-		if (clickPoints.size() == 4) {
+		// 检测是否靠近历史点击点
+		const double snapDistance = 10.0;
+		for (const QPointF &historyPoint : clickHistory) {
+			if (QLineF(position, historyPoint).length() <= snapDistance) {
+				position = historyPoint;
+				break;
+			}
+		}
+		
+		// 记录当前点击点
+		currentClick.append(position);
+		clickHistory.append(position);
+		
+		if (currentClick.size() == 4) {
 			drawQuadrilateral();
 			processImage();
-			clickPoints.clear();
+			currentClick.clear();
 		}
+		
+		repaintRects();
+	}
+
+	void handleRightClick(QPointF position) {
+		const double cancelDistance = 10.0;
+		
+		// 检查当前点击点
+		for (auto it = currentClick.begin(); it != currentClick.end(); ) {
+			if (QLineF(position, *it).length() <= cancelDistance) {
+				it = currentClick.erase(it);
+				break;
+			} else {
+				++it;
+			}
+		}
+		
+		// 检查历史点击点
+		for (auto it = clickHistory.begin(); it != clickHistory.end(); ) {
+			if (QLineF(position, *it).length() <= cancelDistance) {
+				it = clickHistory.erase(it);
+				break;
+			} else {
+				++it;
+			}
+		}
+
+		repaintRects();
+	}
+	void repaintRects(){
+		// 清除并重新绘制所有点
 		for(auto rectItem : rects){
 			scene->removeItem(rectItem);
 			delete rectItem;
 		}
 		rects.clear();
-		for (auto clickPoint : clickPoints) {
+		
+		// 绘制历史点击点（黄色）
+		for (const QPointF &historyPoint : clickHistory) {
+			QGraphicsRectItem* rectItem = new QGraphicsRectItem;
+			rects.append(rectItem);
+			scene->addItem(rectItem);
+			rectItem->setBrush(QBrush(Qt::yellow));
+			const double size=5;
+			rectItem->setRect(historyPoint.x() - size/2, historyPoint.y() - size/2, size, size);
+		}
+		
+		// 绘制当前点击点（红色）
+		for (const QPointF &clickPoint : currentClick) {
 			QGraphicsRectItem* rectItem = new QGraphicsRectItem;
 			rects.append(rectItem);
 			scene->addItem(rectItem);
@@ -156,15 +230,37 @@ protected:
 	}
 	void drawQuadrilateral() {
 		QPolygonF polygon;
-		for (const QPointF &point : clickPoints) {
+		for (const QPointF &point : currentClick) {
 			polygon << point;
 		}
 		scene->addPolygon(polygon, QPen(Qt::red, 2), QBrush(Qt::transparent));
 	}
 	void processImage(){
-		int w=widthSpinBox->value(),h=heightSpinBox->value();
-		int imgW=w*50,imgH=h*50;
-		QPixmap result(imgW, imgH);
+		const int size=50;
+		int w=widthSpinBox->value()*size,h=heightSpinBox->value()*size;
+		QImage result(w, h, QImage::Format_ARGB32);
+		QPointF topleft=currentClick[0],bottomleft=currentClick[1],bottomright=currentClick[2],topright=currentClick[3];
+		for(int i=0;i<w;++i){
+			double bx=myFFmpeg::avg(topleft.x(),topright.x(),i*1.0/w),by=myFFmpeg::avg(topleft.y(),topright.y(),i*1.0/w);
+			double ex=myFFmpeg::avg(bottomleft.x(),bottomright.x(),i*1.0/w),ey=myFFmpeg::avg(bottomleft.y(),bottomright.y(),i*1.0/w);
+			// qDebug()<<bx<<" -> "<<ex<<" "<<by<<" -> "<<ey;
+			
+			for(int j=0;j<h;++j){
+				double curx=myFFmpeg::avg(bx,ex,j*1.0/h);
+				double cury=myFFmpeg::avg(by,ey,j*1.0/h);
+				result.setPixel(w-i-1,h-j-1,pixmap.toImage().pixel(curx,cury));
+			}
+		}
+		result.save(QString("out/flatter-%1.png").arg(index,3,10,QChar('0')));
+		++index;
+	}
+	void setIndex(){
+		// 动态设置index，避免覆盖已有文件
+		QString basePath = "out/flatter-";
+		QString filePath;
+		do{
+			filePath = QString("%1%2.png").arg(basePath).arg(++index, 3, 10, QChar('0'));
+		} while (QFile::exists(filePath));
 	}
 };
 
