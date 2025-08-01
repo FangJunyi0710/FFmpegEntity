@@ -54,7 +54,7 @@ class SwResample{
 public:
 	SwResample(){}
 	SwResample(AudioFormat src,AudioFormat dst);
-	~SwResample();
+	~SwResample()noexcept;
 	SWAP(SwResample){
 		std::swap(context,o.context);
 	}

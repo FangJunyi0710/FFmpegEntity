@@ -4,7 +4,7 @@ namespace myFFmpeg{
 
 void Encoder::setpts(vector<Frame>& source){
 	for(auto& each:source){
-        each->pts=curTime/stream->time_base;
+		each->pts=curTime/m_stream->time_base;
 		curTime+=step();
 	}
 }
@@ -16,7 +16,7 @@ vector<Frame> Encoder::pretreat(const vector<Frame>& source){
 vector<Packet> Encoder::aftertreat(const vector<Packet>& products)const{
 	auto ret=products;
 	for(auto& each:ret){
-        each->stream_index=stream->index;
+		each->stream_index=m_stream->index;
 	}
 	return ret;
 }

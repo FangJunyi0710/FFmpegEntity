@@ -4,6 +4,13 @@
 
 namespace myFFmpeg{
 
+/**
+ * 用法：
+ *   只能使用子类。
+ * Encoder* encoder=new SomeEncoder(args...);
+ * encoder.setStream(stream);
+ * encoder.configure();
+ */
 class Encoder:public BasicEncoder{
 	double curTime=0;
 	void setpts(vector<Frame>& source);

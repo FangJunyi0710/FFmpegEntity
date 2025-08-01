@@ -69,7 +69,7 @@ public:
 		while(working || !buffer.empty());
 		return pop();
 	}
-	~Handler() {
+	~Handler()noexcept {
 		stop = true;
 		condition.notify_all();
 		for(auto& t : th) {

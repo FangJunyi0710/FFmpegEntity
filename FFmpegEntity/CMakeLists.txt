@@ -17,6 +17,7 @@ set(SOURCES
     Format/AVFormat.cpp
     Format/AVInput.cpp
     Format/AVOutput.cpp
+    Format/Stream.cpp
 
     Basic/Basic.h
     Basic/Color.h
@@ -31,6 +32,7 @@ set(SOURCES
     Format/AVFormat.h
     Format/AVInput.h
     Format/AVOutput.h
+    Format/Stream.h
 )
 
 add_library(FFmpegEntity ${SOURCES})
@@ -54,8 +56,6 @@ pkg_check_modules(FFMPEG REQUIRED IMPORTED_TARGET
     libavdevice
     libswresample
 )
-
-# 链接时直接使用 PkgConfig 生成的接口
 target_link_libraries(FFmpegEntity PRIVATE PkgConfig::FFMPEG)
 
 # 添加编译选项

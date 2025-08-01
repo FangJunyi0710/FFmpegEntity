@@ -25,7 +25,7 @@ class SwscaleBuffer{
 		bufferedSwscale.clear();
 	}
 public:
-	~SwscaleBuffer(){
+	~SwscaleBuffer()noexcept{
 		clear();
 	}
 	SwsContext* pop(const VideoFormat& src,const VideoFormat& dst){
@@ -107,7 +107,7 @@ int SwResample::receive(uint8_t*const* out,int count)const{
 int SwResample::samplesCount()const{
 	return swr_get_out_samples(context,0);
 }
-SwResample::~SwResample(){
+SwResample::~SwResample()noexcept{
 	swr_free(&context);
 }
 

@@ -248,7 +248,7 @@ protected:
 			for(int j=0;j<h;++j){
 				double curx=myFFmpeg::avg(bx,ex,j*1.0/h);
 				double cury=myFFmpeg::avg(by,ey,j*1.0/h);
-				result.setPixel(w-i-1,h-j-1,pixmap.toImage().pixel(curx,cury));
+				result.setPixel(i,j,pixmap.toImage().pixel(curx,cury));
 			}
 		}
 		result.save(QString("out/flatter-%1.png").arg(index,3,10,QChar('0')));

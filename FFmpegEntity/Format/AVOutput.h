@@ -1,23 +1,22 @@
 #pragma once
 
-#include "Encoder.h"
+#include "Stream.h"
 #include "AVFormat.h"
-#include <array>
 
 namespace myFFmpeg{
 
 class AVOutput:public AVFormat{
-	std::array<Encoder*,AVMEDIA_TYPE_NB> encoders={nullptr};
+	std::array<WriteStream*,AVMEDIA_TYPE_NB> streams{};
 public:
 	AVOutput(string filename,const vector<Encoder*>& arg_encoders);
 	SWAP(AVOutput,"",{}){
 		AVFormat::swap(o);
-		encoders.swap(o.encoders);
+		streams.swap(o.streams);
 	}
-	void encode(AVMediaType type,const vector<Frame>& frames);
+	WriteStream& stream(AVMediaType type){return *streams[type];}
 	void flush();
 	void close();
-	~AVOutput();
+	~AVOutput()noexcept;
 };
 
 }

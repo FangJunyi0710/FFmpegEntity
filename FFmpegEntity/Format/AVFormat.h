@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Frame.h"
+#include <array>
 
 namespace myFFmpeg{
 
@@ -9,11 +10,11 @@ using std::string;
 class AVFormat{
 protected:
 	AVFormatContext* context=nullptr;
-public:
 	AVFormat(){}
-	virtual ~AVFormat()noexcept{
+	~AVFormat()noexcept{
 		avformat_free_context(context);
 	}
+public:
 	SWAP(AVFormat){
 		std::swap(context,o.context);
 	}

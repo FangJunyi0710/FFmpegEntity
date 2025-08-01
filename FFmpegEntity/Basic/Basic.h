@@ -23,7 +23,7 @@ T avg(const T& a,const T& b,const W& wa,const W& wb){
 }
 template<class T,class W>
 T avg(const T& a,const T& b,const W& wa){
-	return avg(a,b,wa,1-wa);
+	return avg(a,b,1-wa,wa);
 }
 using std::max;
 using std::string;
@@ -73,5 +73,5 @@ using std::vector;
 	T(T&& o)noexcept:T(__VA_ARGS__){swap(o);} \
 	void swap(T&& o)noexcept{swap(o);}\
 	T& operator=(T&& o)noexcept{swap(o);return *this;} \
-	void swap(T& o)noexcept
+	void swap([[maybe_unused]]T& o)noexcept
 	

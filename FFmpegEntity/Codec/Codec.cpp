@@ -38,20 +38,20 @@ void Codec<fromT,toT,send_,receive_>::writeStream()const{
 	if(!context){
 		return;
 	}
-	if(avcodec_parameters_from_context(stream->codecpar,context)<0){
+	if(avcodec_parameters_from_context(m_stream->codecpar,context)<0){
 		throw CodecError("avcodec_parameters_from_context failed");
 	}
 }
 
 template<class fromT,class toT,int(*send_)(AVCodecContext*,const typename std::decay<decltype(**fromT())>::type*),int(*receive_)(AVCodecContext*,decltype(*toT()))>
 void Codec<fromT,toT,send_,receive_>::readStream(){
-	if(!stream){
+	if(!m_stream){
 		return;
 	}
-	if(avcodec_parameters_to_context(context,stream->codecpar)<0){
+	if(avcodec_parameters_to_context(context,m_stream->codecpar)<0){
 		throw CodecError("avcodec_parameters_to_context failed");
 	}
-	context->pkt_timebase=stream->time_base;
+	context->pkt_timebase=m_stream->time_base;
 }
 
 template<class fromT,class toT,int(*send_)(AVCodecContext*,const typename std::decay<decltype(**fromT())>::type*),int(*receive_)(AVCodecContext*,decltype(*toT()))>
@@ -75,10 +75,16 @@ Codec<fromT,toT,send_,receive_>::~Codec()noexcept{
 	av_dict_free(&options);
 }
 
-template<class fromT,class toT,int(*send_)(AVCodecContext*,const typename std::decay<decltype(**fromT())>::type*),int(*receive_)(AVCodecContext*,decltype(*toT()))>
-void Codec<fromT,toT,send_,receive_>::setStream(AVStream* s){
-	stream=s;
-	if(!stream){
+template <class fromT, class toT, int (*send_)(AVCodecContext *, const typename std::decay<decltype(**fromT())>::type *), int (*receive_)(AVCodecContext *, decltype(*toT()))>
+const AVStream *Codec<fromT, toT, send_, receive_>::stream(){
+	return m_stream;
+}
+
+template <class fromT, class toT, int (*send_)(AVCodecContext *, const typename std::decay<decltype(**fromT())>::type *), int (*receive_)(AVCodecContext *, decltype(*toT()))>
+void Codec<fromT, toT, send_, receive_>::setStream(AVStream *s)
+{
+    m_stream=s;
+	if(!m_stream){
 		return;
 	}
 	writeStream();
@@ -113,6 +119,12 @@ template<class fromT,class toT,int(*send_)(AVCodecContext*,const typename std::d
 void Codec<fromT,toT,send_,receive_>::end(){
 	send(flushBuffer());
 	send_(context,nullptr);
+	send({});
+}
+
+template<class fromT,class toT,int(*send_)(AVCodecContext*,const typename std::decay<decltype(**fromT())>::type*),int(*receive_)(AVCodecContext*,decltype(*toT()))>
+void Codec<fromT,toT,send_,receive_>::reset(){
+	avcodec_flush_buffers(context);
 	send({});
 }
 

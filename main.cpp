@@ -41,6 +41,14 @@ public:
 
 int main(){
 	AVOutput output("out/output.mp4", {new VideoEncoder({1920, 1080, AV_PIX_FMT_YUV420P},AV_CODEC_ID_H264,30,300000,{{"preset","ultrafast"}})}); // 创建输出对象，指定文件名、分辨率和帧率
+	
+	AVInput mp3("resource/起风了.mpga");
+	auto& stream=mp3.stream(AVMEDIA_TYPE_AUDIO);
+	stream.moveTo(30);
+	AVOutput tmpOutput("out/tmp.mp3",{new AudioEncoder({AV_CHANNEL_LAYOUT_STEREO,AV_SAMPLE_FMT_FLTP,44100},AV_CODEC_ID_MP3)});
+	tmpOutput.stream(AVMEDIA_TYPE_AUDIO).encode(stream.decode(10));
+	tmpOutput.close();
+	
 	vector<unique_ptr<AbstractLayer>> layer;
 	layer.push_back(make_unique<Layer>([](VideoFrame &frame, double t)
 	{
@@ -80,12 +88,7 @@ int main(){
 			layer[j]->produce(frame,i/30.0);
 		}
 
-		// clog<<"from main frame: "<<frame.pixel(0,0)<<" "<<frame.pixel(1919,0)<<" "<<frame.pixel(0,1079)<<" "<<frame.pixel(1919,1079)<<endl;
-		// AVOutput tmpout(string("out/tmp") + to_string(i) + ".png", {new VideoEncoder({1920, 1080, AV_PIX_FMT_RGBA}, AV_CODEC_ID_PNG)});
-		// tmpout.encode(AVMEDIA_TYPE_VIDEO, {frame.toFrame()});
-		// tmpout.close();
-
-		output.encode(AVMEDIA_TYPE_VIDEO, {frame.toFrame()});
+		output.stream(AVMEDIA_TYPE_VIDEO)<<frame.toFrame();
 	}
 	output.flush();
 

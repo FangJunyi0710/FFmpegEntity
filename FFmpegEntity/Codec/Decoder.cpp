@@ -8,7 +8,7 @@ Decoder::Decoder(AVStream* s){
 		return;
 	}
 	setStream(s);
-	codec=avcodec_find_decoder(stream->codecpar->codec_id);
+	codec=avcodec_find_decoder(m_stream->codecpar->codec_id);
 	if(!codec){
 		throw CodecError("No available decoder");
 	}

@@ -36,3 +36,4 @@ build
 .vscode
 out/
 perf.data*
+*.code-workspace
