@@ -30,23 +30,17 @@ void ReadStream::movePoint(const cIT& newPoint) {
 	}
 	flushDecoder();
 	point = newPoint;
-	clog("point changed time=",currentTime());
 }
 
 ReadStream::cIT ReadStream::seekKeyFrame(cIT pos) const {
-	clog("seeking");
 	if (m_decoder->type() != AVMEDIA_TYPE_VIDEO) {
-		clog("return pos");
 		return pos; // 非视频流无需查找关键帧
 	}
-
 	for(cIT i=pos;i!=m_data.begin();--i){
 		if((*i)->flags & AV_PKT_FLAG_KEY) {
-			clog("return ",(*i)->pts*timeBase()," with pos=",(*pos)->pts*timeBase());
 			return i;
 		}
 	}
-	clog("return begin"); 
 	return m_data.begin();
 }
 
@@ -56,11 +50,9 @@ vector<Frame> ReadStream::decode(const cIT &end) {
 
 	// 2. 接收解码后的帧，并按 PTS 排序
 	vector<Frame> frames = m_decoder->receive();
-	clog("frame pts: from ",frames[0]->pts," to ",(*frames.rbegin())->pts);
 	std::sort(frames.begin(), frames.end(), [](const Frame& a, const Frame& b) {
 		return a->pts < b->pts;
 	});
-	clog("decode frames.size ",frames.size());
 
 	// 3. 记录当前时间范围
 	int64_t ptsBegin = 0x7fffffffffffffff, ptsEnd = 0x7fffffffffffffff;
@@ -71,7 +63,6 @@ vector<Frame> ReadStream::decode(const cIT &end) {
 		ptsEnd = (*end)->pts;
 	}
 	point = end; // 更新当前点
-	clog("pts b,e = ",ptsBegin,",",ptsEnd);
 
 	// 4. 如果是视频流，处理缓存和合并帧
 	if (m_decoder->type() == AVMEDIA_TYPE_VIDEO) {
@@ -81,28 +72,20 @@ vector<Frame> ReadStream::decode(const cIT &end) {
 		auto upper = std::lower_bound(lower, frames.end(), ptsEnd,
 			[](const Frame& f, int64_t t) { return f->pts < t; });
 
-		clog("before: cache.size ",cache.size());
 		// 4.2 缓存超出当前范围的帧
 		cache.insert(cache.end(), upper, frames.end());
-		clog("inserted to cache ",frames.end()-upper," frames");
 
 		// 4.3 处理缓存中的帧
 		auto cacheLower = std::lower_bound(cache.begin(), cache.end(), ptsBegin,
 			[](const Frame& f, int64_t t) { return f->pts < t; });
 		auto cacheUpper = std::lower_bound(cacheLower, cache.end(), ptsEnd,
 			[](const Frame& f, int64_t t) { return f->pts < t; });
-		clog("cache:  upper-lower=",cacheUpper-cacheLower);
-		clog("frames: upper-lower=",upper-lower);
 		// 4.4 合并当前帧和缓存帧
 		vector<Frame> ret((upper - lower) + (cacheUpper - cacheLower));
 		std::merge(lower, upper, cacheLower, cacheUpper, ret.begin(),
 			[](const Frame& a, const Frame& b) { return a->pts < b->pts; });
-		clog("merge res.size=",ret.size());
 		// 4.5 更新缓存
 		cache.erase(cache.begin(), cacheUpper); // 移除已处理的帧
-		clog("after erase cache.size=",cache.size());
-
-		clog("ret pts: from ",ret[0]->pts," to ",(*ret.rbegin())->pts);
 		return ret;
 	}
 
@@ -111,7 +94,6 @@ vector<Frame> ReadStream::decode(const cIT &end) {
 }
 
 ReadStream::cIT ReadStream::map(double time)const{
-	clog("time=",time," timebase=",timeBase().num,"/",timeBase().den);
 	return ptsMap.lower_bound(time/timeBase())->second;
 }
 
@@ -126,10 +108,8 @@ double ReadStream::currentTime() const {
 		return 0;
 	}
 	if(point==m_data.end()){
-		clog("time=(end)",(*m_data.rbegin())->pts * timeBase());
 		return (*m_data.rbegin())->pts*timeBase();
 	}
-	clog("time=",(*point)->pts * timeBase());
 	return (*point)->pts * timeBase();
 }
 

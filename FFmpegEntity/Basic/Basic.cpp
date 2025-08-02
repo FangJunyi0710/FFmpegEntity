@@ -2,6 +2,4 @@
 
 namespace myFFmpeg{
 
-void logImpl(std::ostringstream&){}
-
 }

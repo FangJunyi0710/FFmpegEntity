@@ -45,9 +45,7 @@ int main(){
 	AVInput mp4("resource/test.mp4");
 	auto& stream=mp4.stream(AVMEDIA_TYPE_VIDEO);
 	stream.moveTo(50.289);
-	clog("time1=",stream.currentTime());
 	AVOutput tmpOutput("out/tmp.mp4",{new VideoEncoder({1280, 720, AV_PIX_FMT_YUV420P},AV_CODEC_ID_H264,30,0,{{"preset","fast"}})});
-	clog("time2=",stream.currentTime());
 	tmpOutput.stream(AVMEDIA_TYPE_VIDEO).encode(stream.decode(11.4514));
 	tmpOutput.close();
 	

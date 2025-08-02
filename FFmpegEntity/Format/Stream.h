@@ -2,16 +2,11 @@
 
 #include "Decoder.h"
 #include "Encoder.h"
+#include "Log.h"
 
 namespace myFFmpeg{
 
-/**
- * 这是一个自动管理编解码的封装类。
- * 使用指针机制，读（解码）与写（编码）都基于当前指针位置。
- * 可以根据时间戳移动指针。
- */
 class BasicStream{
-	// AVStream* m_stream;
 	AVRational m_timeBase;
 	AVMediaType m_type;
 protected:
@@ -19,7 +14,8 @@ protected:
 	~BasicStream()noexcept{}
 public:
 	SWAP(BasicStream,nullptr){
-		// std::swap(m_stream,o.m_stream);
+		std::swap(m_timeBase,o.m_timeBase);
+		std::swap(m_type,o.m_type);
 	}
 	COPY(BasicStream)=delete;
 
@@ -48,7 +44,6 @@ class ReadStream:public BasicStream{
 	vector<Frame> decode(const cIT& end);
 	void flushDecoder();
 public:
-	// 只读
 	ReadStream(AVStream* stream, const vector<Packet>& data={});
 	SWAP(ReadStream,nullptr){
 		BasicStream::swap(o);
@@ -68,7 +63,6 @@ public:
 class WriteStream: public BasicStream{
 	Encoder* m_encoder=nullptr;
 public:
-	// 只写
 	WriteStream(AVStream* stream, Encoder* encoder);
 	SWAP(WriteStream,nullptr,nullptr){
 		BasicStream::swap(o);
