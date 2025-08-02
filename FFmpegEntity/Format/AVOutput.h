@@ -13,7 +13,10 @@ public:
 		AVFormat::swap(o);
 		streams.swap(o.streams);
 	}
-	WriteStream& stream(AVMediaType type){return *streams[type];}
+	WriteStream& stream(AVMediaType type){
+		if(!streams[type]){throw CodecError("No such stream");}
+		return *streams[type];
+	}
 	void flush();
 	void close();
 	~AVOutput()noexcept;

@@ -42,11 +42,13 @@ public:
 int main(){
 	AVOutput output("out/output.mp4", {new VideoEncoder({1920, 1080, AV_PIX_FMT_YUV420P},AV_CODEC_ID_H264,30,300000,{{"preset","ultrafast"}})}); // 创建输出对象，指定文件名、分辨率和帧率
 	
-	AVInput mp3("resource/起风了.mpga");
-	auto& stream=mp3.stream(AVMEDIA_TYPE_AUDIO);
-	stream.moveTo(30);
-	AVOutput tmpOutput("out/tmp.mp3",{new AudioEncoder({AV_CHANNEL_LAYOUT_STEREO,AV_SAMPLE_FMT_FLTP,44100},AV_CODEC_ID_MP3)});
-	tmpOutput.stream(AVMEDIA_TYPE_AUDIO).encode(stream.decode(10));
+	AVInput mp4("resource/test.mp4");
+	auto& stream=mp4.stream(AVMEDIA_TYPE_VIDEO);
+	stream.moveTo(50.289);
+	clog("time1=",stream.currentTime());
+	AVOutput tmpOutput("out/tmp.mp4",{new VideoEncoder({1280, 720, AV_PIX_FMT_YUV420P},AV_CODEC_ID_H264,30,0,{{"preset","fast"}})});
+	clog("time2=",stream.currentTime());
+	tmpOutput.stream(AVMEDIA_TYPE_VIDEO).encode(stream.decode(11.4514));
 	tmpOutput.close();
 	
 	vector<unique_ptr<AbstractLayer>> layer;
@@ -78,7 +80,7 @@ int main(){
 	{
 		return x;
 	}));
-	const int len=10;
+	const int len=0;
 	for(int i=0;i<30*len;++i){
 		if(i%30==0){
 			clog<<i/30<<endl;

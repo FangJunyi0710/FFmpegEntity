@@ -17,7 +17,10 @@ public:
 		streams.swap(o.streams);
 	}
 
-	ReadStream& stream(AVMediaType type){return *streams[type];}
+	ReadStream& stream(AVMediaType type){
+		if(!streams[type]){throw CodecError("No such stream");}
+		return *streams[type];
+	}
 };
 
 }

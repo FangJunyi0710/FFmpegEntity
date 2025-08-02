@@ -61,7 +61,7 @@ public:
 	}
 	vector<Frame> pop() {
 		std::lock_guard<std::mutex> locker(lock);
-	   auto ret = converted;
+		auto ret = converted;
 		converted.clear();
 		return ret;
 	}
@@ -94,7 +94,7 @@ VideoEncoder::VideoEncoder(VideoFormat format, AVCodecID id, int fps_, int64_t b
 	context->width = format.width;
 	context->height = format.height;
 
-	context->gop_size = fps;   // I帧间隔
+	context->gop_size = fps * 5;   // I帧间隔
 	context->max_b_frames = 4; // B帧 ( I BBB P BBB P BBB P BBB P BBB I )
 
 	context->time_base = {1, fps};

@@ -11,18 +11,20 @@ namespace myFFmpeg{
  * 可以根据时间戳移动指针。
  */
 class BasicStream{
-	AVStream* m_stream;
+	// AVStream* m_stream;
+	AVRational m_timeBase;
+	AVMediaType m_type;
 protected:
-	BasicStream(AVStream* stream): m_stream(stream){}
+	BasicStream(AVStream* stream): m_timeBase(stream->time_base), m_type(stream->codecpar->codec_type){}
 	~BasicStream()noexcept{}
 public:
 	SWAP(BasicStream,nullptr){
-		std::swap(m_stream,o.m_stream);
+		// std::swap(m_stream,o.m_stream);
 	}
 	COPY(BasicStream)=delete;
 
-	AVRational timeBase() const{std::clog<<m_stream;return m_stream->time_base;}
-	AVMediaType type()const{return m_stream->codecpar->codec_type;}
+	AVRational timeBase() const{return m_timeBase;}
+	AVMediaType type()const{return m_type;}
 };
 
 class ReadStream:public BasicStream{

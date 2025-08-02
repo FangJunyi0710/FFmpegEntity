@@ -4,6 +4,9 @@
 #include <vector>
 #include <string>
 #include <stdexcept>
+#include <iostream>
+#include <sstream>
+#include "Char033.h"
 
 namespace myFFmpeg{
 
@@ -30,6 +33,33 @@ using std::string;
 
 using ull=unsigned long long;
 using ushort=unsigned short;
+
+
+#ifdef LOG
+// 递归终止函数
+void logImpl(std::ostringstream&);
+
+// 递归展开参数包
+template <typename T, typename... Args>
+void logImpl(std::ostringstream& oss, T&& first, Args&&... args) {
+	oss << std::forward<T>(first); // 拼接当前参数
+	logImpl(oss, std::forward<Args>(args)...); // 递归处理剩余参数
+}
+
+// 日志函数
+template <typename... Args>
+void logWithContext(const char* file, const char* function, int line, Args&&... args) {
+	std::ostringstream oss;
+	logImpl(oss, std::forward<Args>(args)...); // 拼接所有参数
+	std::clog<<c033::pSkyBlue << "[" << file << ":" << line << " " << function << "] " << c033::pNone << oss.str() << std::endl;
+}
+
+// 宏定义简化调用
+#define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
+#define clog(...) logWithContext(__FILENAME__, __func__, __LINE__, __VA_ARGS__)
+#else
+#define clog(...) ((void)0)
+#endif
 
 
 class FFmpegError:public std::runtime_error{

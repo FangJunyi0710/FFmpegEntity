@@ -5,6 +5,7 @@ namespace myFFmpeg{
 void Encoder::setpts(vector<Frame>& source){
 	for(auto& each:source){
 		each->pts=curTime/m_stream->time_base;
+		each->pict_type=AV_PICTURE_TYPE_NONE;// 不指定帧类型
 		curTime+=step();
 	}
 }
