@@ -7,6 +7,7 @@ extern "C"{
 #include <libswscale/swscale.h>
 #include <libswresample/swresample.h>
 }
+typedef unsigned int QRgb;
 
 namespace myFFmpeg{
 
@@ -17,35 +18,38 @@ class Color{
 	// Ensure consistent RGBA order regardless of byte order
 	enum Shifts {
 #if AV_HAVE_BIGENDIAN
-		RedShift = 48,
-		GreenShift = 32,
-		BlueShift = 16,
+		RedShift = 24,
+		GreenShift = 16,
+		BlueShift = 8,
 		AlphaShift = 0
 #else // little endian:
 		RedShift = 0,
-		GreenShift = 16,
-		BlueShift = 32,
-		AlphaShift = 48
+		GreenShift = 8,
+		BlueShift = 16,
+		AlphaShift = 24
 #endif
 	};
 public:
-	using RGBA=ull;
-	using T = ushort;
+	using DATA=uint;
+	using T = u_char;
 
-	static const T max = 0xffff;
-	RGBA rgba;
-	Color(RGBA rgba_ = 0x000000ff) : rgba(rgba_) {}
-	Color(T r, T g, T b, T a = max) : rgba((RGBA(r) << RedShift) | (RGBA(g) << GreenShift) | (RGBA(b) << BlueShift) | (RGBA(a) << AlphaShift)) {}
+	static const T max = 255;
+	DATA data;
+	Color():Color(0,0,0){}
+	Color(T r, T g, T b, T a = max) : data((DATA(r) << RedShift) | (DATA(g) << GreenShift) | (DATA(b) << BlueShift) | (DATA(a) << AlphaShift)) {}
 	Color &operator+=(const Color &o) { return *this = *this + o; }
-	T red() const { return (rgba >> RedShift) & max; }
-	T green() const { return (rgba >> GreenShift) & max; }
-	T blue() const { return (rgba >> BlueShift) & max; }
-	T alpha() const { return (rgba >> AlphaShift) & max; }
-	void setRed(T r) { rgba = (rgba & (~RGBA() ^ (RGBA(max) << RedShift))) | (RGBA(r) << RedShift); }
-	void setGreen(T g) { rgba = (rgba & (~RGBA() ^ (RGBA(max) << GreenShift))) | (RGBA(g) << GreenShift); }
-	void setBlue(T b) { rgba = (rgba & (~RGBA() ^ (RGBA(max) << BlueShift))) | (RGBA(b) << BlueShift); }
-	void setAlpha(T a) { rgba = (rgba & (~RGBA() ^ (RGBA(max) << AlphaShift))) | (RGBA(a) << AlphaShift); }
+	T red() const { return (data >> RedShift) & max; }
+	T green() const { return (data >> GreenShift) & max; }
+	T blue() const { return (data >> BlueShift) & max; }
+	T alpha() const { return (data >> AlphaShift) & max; }
+	void setRed(T r) { data = (data & (~DATA() ^ (DATA(max) << RedShift))) | (DATA(r) << RedShift); }
+	void setGreen(T g) { data = (data & (~DATA() ^ (DATA(max) << GreenShift))) | (DATA(g) << GreenShift); }
+	void setBlue(T b) { data = (data & (~DATA() ^ (DATA(max) << BlueShift))) | (DATA(b) << BlueShift); }
+	void setAlpha(T a) { data = (data & (~DATA() ^ (DATA(max) << AlphaShift))) | (DATA(a) << AlphaShift); }
 	static AVPixelFormat PIX_FMT;
+
+	Color(const QRgb&);
+	operator QRgb()const;
 };
 
 }

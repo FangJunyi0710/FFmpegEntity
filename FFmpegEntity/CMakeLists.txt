@@ -34,6 +34,7 @@ set(SOURCES
     Format/AVOutput.h
     Format/Stream.h
 )
+# 不包含 QtSupport.cpp，使用 Qt 的项目需手动添加
 
 add_library(FFmpegEntity ${SOURCES})
 
@@ -41,6 +42,7 @@ target_include_directories(FFmpegEntity PUBLIC
 	Format
 	Codec
 	Basic
+    .
 )
 
 # 查找 pkg-config

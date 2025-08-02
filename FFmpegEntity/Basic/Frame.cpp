@@ -26,11 +26,11 @@ VideoFrame::VideoFrame():m_width(0),m_height(0),m_data(nullptr){}
 VideoFrame::VideoFrame(int width,int height,const Color& color):
 	m_width(std::max(0,width)),
 	m_height(std::max(0,height)),
-	m_data(m_width*m_height>0 ? reinterpret_cast<Color*>(new Color::RGBA[m_width*m_height]) : nullptr)
+	m_data(m_width*m_height>0 ? reinterpret_cast<Color*>(new Color::DATA[m_width*m_height]) : nullptr)
 {
 	if(m_data){
 		// 直接填充内存，避免多次调用Color构造函数
-		std::fill_n(reinterpret_cast<Color::RGBA*>(m_data), m_width*m_height, color.rgba);
+		std::fill_n(reinterpret_cast<Color::DATA*>(m_data), m_width*m_height, color.data);
 	}
 }
 

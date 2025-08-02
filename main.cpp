@@ -11,81 +11,44 @@ using namespace myFFmpeg;
 class AbstractLayer{
 protected:
 	virtual void generate(VideoFrame& frame,double tick)=0;
-	virtual double mapTick(double tick){
-		return tick;
-	}
 public:
 	void produce(VideoFrame& frame,double tick){
-		generate(frame,mapTick(tick));
+		generate(frame,tick);
 	}
 	virtual ~AbstractLayer()=default;
 };
 class Layer:public AbstractLayer{
-	function<void(VideoFrame&,double)> gen;
-	function<double(double)> map;
-public:
+	deque<function<void(VideoFrame&,double&)>> gen;
+protected:
 	void generate(VideoFrame& frame,double tick)override{
-		return gen(frame,tick);
+		for(auto& each:gen){
+			each(frame,tick);
+		}
 	}
-	double mapTick(double tick)override{
-		return map(tick);
+public:
+	Layer()=default;
+	Layer(const deque<function<void(VideoFrame&,double&)>>& funcs):gen(funcs){}
+	void prepend(const function<void(VideoFrame&,double&)>& func){
+		gen.push_front(func);
 	}
-	Layer(function<void(VideoFrame&,double)> gen_,function<double(double)> map_=[](double x){return x;}):gen(gen_),map(map_){}
-	void bindGenerator(function<void(VideoFrame&,double)> newGen){
-		gen=newGen;
-	}
-	void bindMapper(function<double(double)> newMap){
-		map=newMap;
+	void append(const function<void(VideoFrame&,double&)>& func){
+		gen.push_back(func);
 	}
 };
 
 int main(){
 	AVOutput output("out/output.mp4", {new VideoEncoder({1920, 1080, AV_PIX_FMT_YUV420P},AV_CODEC_ID_H264,30,300000,{{"preset","ultrafast"}})}); // 创建输出对象，指定文件名、分辨率和帧率
 	
-	AVInput mp4("resource/test.mp4");
-	auto& stream=mp4.stream(AVMEDIA_TYPE_VIDEO);
-	stream.moveTo(50.289);
-	AVOutput tmpOutput("out/tmp.mp4",{new VideoEncoder({1280, 720, AV_PIX_FMT_YUV420P},AV_CODEC_ID_H264,30,0,{{"preset","fast"}})});
-	tmpOutput.stream(AVMEDIA_TYPE_VIDEO).encode(stream.decode(11.4514));
-	tmpOutput.close();
-	
-	vector<unique_ptr<AbstractLayer>> layer;
-	layer.push_back(make_unique<Layer>([](VideoFrame &frame, double t)
-	{
-		int x=(t-floor(t/1)*1)*Color::max;
-		Color color1(x, 0, 0, x);
-		Color color2(0, x, 0, x);
-		Color color3(x, x, x, x);
-		Color color4(0, 0, x, x);
-		for(int i=0;i<1920;++i){
-			for(int j=0;j<1080;++j){
-				if(i<960 && j<540){
-					frame.pixel(i,j)=color1;
-				}
-				if(i>=960 && j<540){
-					frame.pixel(i,j)=color2;
-				}
-				if(i<960 && j>=540){
-					frame.pixel(i,j)=color3;
-				}
-				if(i>=960 && j>=540){
-					frame.pixel(i,j)=color4;
-				}
-			}
-		}
-	},
-	[](double x)
-	{
-		return x;
-	}));
-	const int len=0;
+	vector<Layer> layer;
+
+	const int len=3;
 	for(int i=0;i<30*len;++i){
 		if(i%30==0){
 			clog<<i/30<<endl;
 		}
 		VideoFrame frame(1920,1080,Color());
 		for(int j=0;j<(int)layer.size();++j){
-			layer[j]->produce(frame,i/30.0);
+			layer[j].produce(frame,i/30.0);
 		}
 
 		output.stream(AVMEDIA_TYPE_VIDEO)<<frame.toFrame();

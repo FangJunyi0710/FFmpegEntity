@@ -8,6 +8,7 @@ extern "C"{
 #include <libavformat/avformat.h>
 }
 
+class QImage;
 namespace myFFmpeg{
 
 using std::deque;
@@ -71,6 +72,9 @@ public:
 	VideoFormat format() const;
 	Frame toFrame()const;
 	Frame toFrame(VideoFormat resFormat)const;
+
+	VideoFrame(const QImage&);
+	operator QImage()const;
 };
 
 class AudioBuffer{
