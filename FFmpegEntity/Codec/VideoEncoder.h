@@ -9,12 +9,12 @@ class VideoEncoder:public Encoder{
 	Handler* handler;
 protected:
 	int fps;
+	VideoEncoder(){}
 	double step()const override;
 	vector<Frame> convertFormat(const vector<Frame>& source)override;
 	vector<Frame> flushBuffer()override;
 public:
-	VideoEncoder(){}
-	VideoEncoder(VideoFormat format,AVCodecID id=AV_CODEC_ID_H264,int fps_=30,int64_t bit_rate=0,const std::map<string,string>& opts={});
+	VideoEncoder(const Encoder::Params&,VideoFormat format,int fps_=30);
 	~VideoEncoder()noexcept;
 	SWAP(VideoEncoder){
 		Encoder::swap(o);

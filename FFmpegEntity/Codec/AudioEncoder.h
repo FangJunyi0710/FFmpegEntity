@@ -7,12 +7,12 @@ namespace myFFmpeg{
 class AudioEncoder:public Encoder{
 protected:
 	AudioBuffer buffer;
+	AudioEncoder();
 	double step()const override;
 	vector<Frame> convertFormat(const vector<Frame>& source)override;
 	vector<Frame> flushBuffer()override;
 public:
-	AudioEncoder();
-	AudioEncoder(AudioFormat format,AVCodecID id,int64_t bit_rate=0,const std::map<string,string>& opts={});
+	AudioEncoder(const Encoder::Params&,AudioFormat format);
 	~AudioEncoder()noexcept{}
 	SWAP(AudioEncoder){
 		Encoder::swap(o);

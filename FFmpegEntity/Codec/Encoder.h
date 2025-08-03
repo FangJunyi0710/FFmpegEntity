@@ -15,15 +15,22 @@ class Encoder:public BasicEncoder{
 	double curTime=0;
 	void setpts(vector<Frame>& source);
 protected:
+	Encoder():Encoder(Params()){}
 	virtual double step()const=0;
 	virtual vector<Frame> convertFormat(const vector<Frame>& source)=0;
 	vector<Frame> pretreat(const vector<Frame>& source)override;
 	vector<Packet> aftertreat(const vector<Packet>& products)const override;
 public:
-	Encoder(AVCodecID id=AV_CODEC_ID_NONE,int64_t bit_rate=0,const std::map<string,string>& opts={});
+	struct Params{
+		AVCodecID id=AV_CODEC_ID_NONE;
+		int64_t bit_rate=0;
+		std::map<string,string> opts={};
+	};
+	Encoder(const Params& p);
 	~Encoder()noexcept{}
 	SWAP(Encoder){
 		Codec::swap(o);
+		std::swap(curTime,o.curTime);
 	}
 	COPY(Encoder)=delete;
 	AVMediaType type()const;

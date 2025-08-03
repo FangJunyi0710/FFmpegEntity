@@ -41,7 +41,7 @@ struct AudioFormat{
 		std::swap(sampleFormat,o.sampleFormat);
 		std::swap(sampleRate,o.sampleRate);
 	}
-	COPY(AudioFormat):sampleFormat(o.sampleFormat),sampleRate(o.sampleRate){
+	COPY(AudioFormat):channelLayout(AV_CHANNEL_LAYOUT_STEREO),sampleFormat(o.sampleFormat),sampleRate(o.sampleRate){
 		av_channel_layout_copy(&channelLayout,&o.channelLayout);
 	}
 	CLONE(clone,AudioFormat,AudioFormat*)

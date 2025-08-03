@@ -14,9 +14,9 @@ vector<Frame> AudioEncoder::convertFormat(const vector<Frame>& source){
 }
 vector<Frame> AudioEncoder::flushBuffer(){
 	return buffer.flush(context->frame_size);
-} 
-AudioEncoder::AudioEncoder():buffer({AV_CHANNEL_LAYOUT_STEREO,AV_SAMPLE_FMT_DBLP,44100}){}
-AudioEncoder::AudioEncoder(AudioFormat format,AVCodecID id,int64_t bit_rate,const std::map<string,string>& opts):Encoder(id,bit_rate,opts),buffer(format){
+}
+AudioEncoder::AudioEncoder():buffer({AV_CHANNEL_LAYOUT_STEREO,AV_SAMPLE_FMT_FLTP,44100}){}
+AudioEncoder::AudioEncoder(const Encoder::Params& p, AudioFormat format):Encoder(p),buffer(format){
 	context->ch_layout=format.channelLayout;
 	context->sample_fmt=format.sampleFormat;
 	context->sample_rate=format.sampleRate;

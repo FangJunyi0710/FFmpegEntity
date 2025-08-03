@@ -21,16 +21,16 @@ vector<Packet> Encoder::aftertreat(const vector<Packet>& products)const{
 	}
 	return ret;
 }
-Encoder::Encoder(AVCodecID id,int64_t bit_rate,const std::map<std::string,std::string>& opts){
-	codec=avcodec_find_encoder(id);
+Encoder::Encoder(const Params& p){
+	codec=avcodec_find_encoder(p.id);
 	if(!codec){
 		throw CodecError("No available encoder");
 	}
 	context=avcodec_alloc_context3(codec);
-	context->codec_id = id;
-	context->codec_type = avcodec_get_type(id);
-	context->bit_rate = bit_rate;
-	set(options,opts);
+	context->codec_id = p.id;
+	context->codec_type = avcodec_get_type(p.id);
+	context->bit_rate = p.bit_rate;
+	set(options,p.opts);
 }
 AVMediaType Encoder::type()const{
 	return context->codec_type;

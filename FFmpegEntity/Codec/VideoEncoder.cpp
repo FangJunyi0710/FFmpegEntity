@@ -88,8 +88,7 @@ vector<Frame> VideoEncoder::convertFormat(const vector<Frame>& source) {
 vector<Frame> VideoEncoder::flushBuffer() {
 	return handler->flush();
 }
-VideoEncoder::VideoEncoder(VideoFormat format, AVCodecID id, int fps_, int64_t bit_rate, const std::map<string, string>& opts): Encoder(id, bit_rate, opts), handler(new Handler(format)), fps(fps_) {
-
+VideoEncoder::VideoEncoder(const Encoder::Params& p, VideoFormat format, int fps_):Encoder(p), handler(new Handler(format)), fps(fps_){
 	context->pix_fmt = format.pix_fmt;
 	context->width = format.width;
 	context->height = format.height;
@@ -99,11 +98,8 @@ VideoEncoder::VideoEncoder(VideoFormat format, AVCodecID id, int fps_, int64_t b
 
 	context->time_base = {1, fps};
 	context->framerate = {fps, 1};
-
-	
 }
-VideoEncoder::~VideoEncoder()noexcept {
-	delete handler;
+VideoEncoder::~VideoEncoder() noexcept{
+    delete handler;
 }
-
 }
