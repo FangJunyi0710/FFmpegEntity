@@ -14,7 +14,9 @@ double operator*(int64_t tick,AVRational timeBase);
 double operator*(AVRational timeBase,int64_t tick);
 int64_t operator/(double time,AVRational timeBase);
 
-void set(AVDictionary*& options,const std::map<string,string>& opts);
+using Dictionary=std::map<string,string>;
+void writeAVDictionary(AVDictionary*& options,const Dictionary& opts);
+Dictionary readAVDictionary(AVDictionary* dict);
 
 
 /**

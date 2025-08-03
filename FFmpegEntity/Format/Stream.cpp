@@ -97,8 +97,8 @@ ReadStream::cIT ReadStream::map(double time)const{
 	return ptsMap.lower_bound(time/timeBase())->second;
 }
 
-ReadStream::ReadStream(AVStream* stream, const vector<Packet>& data)
-	: BasicStream(stream),m_data(data.begin(),data.end()), m_decoder(new Decoder(stream)), point(m_data.begin()) {
+ReadStream::ReadStream(AVStream* stream, const vector<Packet>& data, const Dictionary& metadata)
+	: BasicStream(stream),m_data(data.begin(),data.end()),m_metadata(metadata), m_decoder(new Decoder(stream)), point(m_data.begin()) {
 	sortData();      // 按 DTS 排序
 	buildPTSMap();   // 初始化 PTS 映射
 }

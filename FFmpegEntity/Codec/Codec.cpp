@@ -6,10 +6,23 @@
 
 namespace myFFmpeg{
 
-void set(AVDictionary*& options,const std::map<std::string,std::string>& opts){
+void writeAVDictionary(AVDictionary*& options,const Dictionary& opts){
 	for(const auto& [key,value]:opts){
 		av_dict_set(&options,key.c_str(),value.c_str(),0);
 	}
+}
+Dictionary readAVDictionary(AVDictionary* dict) {
+    std::map<std::string, std::string> result;
+    if (!dict) {
+        return result; // 返回空map
+    }
+    AVDictionaryEntry* entry = nullptr;
+    while ((entry = av_dict_get(dict, "", entry, AV_DICT_IGNORE_SUFFIX))) {
+        if (entry->key && entry->value) {
+            result[entry->key] = entry->value;
+        }
+    }
+    return result;
 }
 
 double operator*(int64_t tick,AVRational timeBase){

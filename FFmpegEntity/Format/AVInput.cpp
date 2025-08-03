@@ -16,8 +16,10 @@ AVInput::AVInput(string url){
 		packet.unref();
 	}
 	for(u_int i=0;i<context->nb_streams;++i){
-		streams[context->streams[i]->codecpar->codec_type]=new ReadStream(context->streams[i],packets[context->streams[i]->codecpar->codec_type]);
+		const auto& type=context->streams[i]->codecpar->codec_type;
+		streams[type]=new ReadStream(context->streams[i],packets[type],readAVDictionary(context->streams[i]->metadata));
 	}
+	m_metadata=readAVDictionary(context->metadata);
 	avformat_close_input(&context);
 }
 

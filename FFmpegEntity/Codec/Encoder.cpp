@@ -30,7 +30,7 @@ Encoder::Encoder(const Params& p){
 	context->codec_id = p.id;
 	context->codec_type = avcodec_get_type(p.id);
 	context->bit_rate = p.bit_rate;
-	set(options,p.opts);
+	writeAVDictionary(options,p.opts);
 }
 AVMediaType Encoder::type()const{
 	return context->codec_type;

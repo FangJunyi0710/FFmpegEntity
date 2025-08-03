@@ -27,6 +27,8 @@ class ReadStream:public BasicStream{
 	vector<Packet> m_data;
 	using cIT=decltype(m_data)::const_iterator;
 
+	Dictionary m_metadata;
+
 	std::map<int64_t,cIT> ptsMap;
 	Decoder* m_decoder=nullptr;
 	deque<Frame> cache;
@@ -44,7 +46,7 @@ class ReadStream:public BasicStream{
 	vector<Frame> decode(const cIT& end);
 	void flushDecoder();
 public:
-	ReadStream(AVStream* stream, const vector<Packet>& data={});
+	ReadStream(AVStream* stream, const vector<Packet>& data={},const Dictionary& metadata=Dictionary());
 	SWAP(ReadStream,nullptr){
 		BasicStream::swap(o);
 		std::swap(m_decoder,o.m_decoder);
@@ -58,6 +60,8 @@ public:
 	double currentTime() const;
 	template<class T>
 	void moveTo(T it){movePoint(map(it));}
+
+	Dictionary metadata()const{return m_metadata;}
 };
 
 class WriteStream: public BasicStream{

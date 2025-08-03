@@ -2,7 +2,7 @@
 
 namespace myFFmpeg{
 
-AVOutput::AVOutput(string filename,const vector<Encoder*>& arg_encoders){
+AVOutput::AVOutput(string filename,const vector<Encoder*>& arg_encoders,const Dictionary& metadata,const vector<Dictionary>& streamMetadatas){
 	if(avformat_alloc_output_context2(&context,nullptr,nullptr,filename.c_str())<0){
 		throw FFmpegError("init failed");
 	}
@@ -21,7 +21,11 @@ AVOutput::AVOutput(string filename,const vector<Encoder*>& arg_encoders){
 		}
 		each.second=avformat_new_stream(context,nullptr);
 		each.first->setStream(each.second);
+		if(streamMetadatas.size()>ull(each.first->type())){
+			writeAVDictionary(each.second->metadata,streamMetadatas[each.first->type()]);
+		}
 	}
+	writeAVDictionary(context->metadata,metadata);
 
 	if(avformat_write_header(context,nullptr)<0){
 		throw FFmpegError("Writing header failed");
