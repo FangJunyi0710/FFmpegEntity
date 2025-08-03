@@ -9,15 +9,16 @@ AVInput::AVInput(string url){
 	if(avformat_find_stream_info(context,nullptr)){
 		throw FileError("invalid file "+url);
 	}
-	std::array<vector<Packet>,AVMEDIA_TYPE_NB> packets;
+	streams.resize(context->nb_streams);
+	std::vector<vector<Packet>> packets(streams.size());
 	Packet packet;
 	while(!av_read_frame(context, *packet)) {
-		packets[context->streams[packet->stream_index]->codecpar->codec_type].push_back(packet);
+		packets[packet->stream_index].push_back(packet);
 		packet.unref();
 	}
 	for(u_int i=0;i<context->nb_streams;++i){
-		const auto& type=context->streams[i]->codecpar->codec_type;
-		streams[type]=new ReadStream(context->streams[i],packets[type],readAVDictionary(context->streams[i]->metadata));
+		streams[i]=new ReadStream(context->streams[i],packets[i],readAVDictionary(context->streams[i]->metadata));
+		m_streamIndex[streams[i]->type()].push_back(i);
 	}
 	m_metadata=readAVDictionary(context->metadata);
 	avformat_close_input(&context);

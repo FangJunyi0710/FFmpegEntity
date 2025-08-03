@@ -37,7 +37,9 @@ public:
 };
 
 int main(){
-	AVOutput output("out/output.mp4", {new VideoEncoder({1920, 1080, AV_PIX_FMT_YUV420P},AV_CODEC_ID_H264,30,300000,{{"preset","ultrafast"}})}); // 创建输出对象，指定文件名、分辨率和帧率
+	AVOutput output("out/output.mp4", {
+		new VideoEncoder({.id=AV_CODEC_ID_H264},{1920, 1080, AV_PIX_FMT_YUV420P})
+	});
 	
 	vector<Layer> layer;
 
@@ -51,7 +53,7 @@ int main(){
 			layer[j].produce(frame,i/30.0);
 		}
 
-		output.stream(AVMEDIA_TYPE_VIDEO)<<frame.toFrame();
+		output[i]<<frame.toFrame();
 	}
 	output.flush();
 

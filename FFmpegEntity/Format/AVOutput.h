@@ -6,7 +6,7 @@
 namespace myFFmpeg{
 
 class AVOutput:public AVFormat{
-	std::array<WriteStream*,AVMEDIA_TYPE_NB> streams{};
+	vector<WriteStream*> streams;
 	AVOutput(){}
 public:
 	AVOutput(string filename,const vector<Encoder*>& arg_encoders,const Dictionary& metadata={},const vector<Dictionary>& streamMetadatas={});
@@ -14,9 +14,8 @@ public:
 		AVFormat::swap(o);
 		streams.swap(o.streams);
 	}
-	WriteStream& stream(AVMediaType type){
-		if(!streams[type]){throw CodecError("No such stream");}
-		return *streams[type];
+	WriteStream& operator[](int index){
+		return *streams[index];
 	}
 	void flush();
 	void close();

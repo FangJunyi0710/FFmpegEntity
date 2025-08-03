@@ -23,8 +23,8 @@ protected:
 public:
 	struct Params{
 		AVCodecID id=AV_CODEC_ID_NONE;
-		int64_t bit_rate=0;
-		std::map<string,string> opts={};
+		int64_t bitRate=0;
+		Dictionary options={};
 	};
 	Encoder(const Params& p);
 	~Encoder()noexcept{}

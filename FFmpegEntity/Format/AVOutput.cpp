@@ -3,6 +3,7 @@
 namespace myFFmpeg{
 
 AVOutput::AVOutput(string filename,const vector<Encoder*>& arg_encoders,const Dictionary& metadata,const vector<Dictionary>& streamMetadatas){
+	cDebug("");
 	if(avformat_alloc_output_context2(&context,nullptr,nullptr,filename.c_str())<0){
 		throw FFmpegError("init failed");
 	}
@@ -10,19 +11,12 @@ AVOutput::AVOutput(string filename,const vector<Encoder*>& arg_encoders,const Di
 		throw FileError("Cannot open file "+filename);
 	}
 
-	std::array<std::pair<Encoder*,AVStream*>,AVMEDIA_TYPE_NB> tempStreams{};
-	for(auto& each:arg_encoders){
-		delete tempStreams[each->type()].first;
-		tempStreams[each->type()]={each,nullptr};
-	}
-	for(auto& each:tempStreams){
-		if(!each.first){
-			continue;
-		}
-		each.second=avformat_new_stream(context,nullptr);
-		each.first->setStream(each.second);
-		if(streamMetadatas.size()>ull(each.first->type())){
-			writeAVDictionary(each.second->metadata,streamMetadatas[each.first->type()]);
+	std::vector<AVStream*> tempStreams(arg_encoders.size());
+	for(ull i=0;i<tempStreams.size();++i){
+		tempStreams[i]=avformat_new_stream(context,nullptr);
+		arg_encoders[i]->setStream(tempStreams[i]);
+		if(streamMetadatas.size()>ull(i)){
+			writeAVDictionary(tempStreams[i]->metadata,streamMetadatas[i]);
 		}
 	}
 	writeAVDictionary(context->metadata,metadata);
@@ -30,19 +24,14 @@ AVOutput::AVOutput(string filename,const vector<Encoder*>& arg_encoders,const Di
 	if(avformat_write_header(context,nullptr)<0){
 		throw FFmpegError("Writing header failed");
 	}
-	for(auto& each:tempStreams){
-		if(!each.first){
-			continue;
-		}
-		streams[each.first->type()]=new WriteStream(each.second,each.first);
+	streams.resize(tempStreams.size());
+	for(ull i=0;i<tempStreams.size();++i){
+		streams[i]=new WriteStream(tempStreams[i],arg_encoders[i]);
 	}
 }
 void AVOutput::flush(){
 	vector<Packet> buffer;
 	for(const auto& each:streams){
-		if(!each){
-			continue;
-		}
 		auto tmp=each->flush();
 		buffer.insert(buffer.end(),tmp.begin(),tmp.end());
 	}
@@ -54,24 +43,19 @@ void AVOutput::flush(){
 	}
 }
 void AVOutput::close(){
-	bool hasEncoder=false;
-	for(const auto& each:streams){
-		if(!each){
-			continue;
-		}
-		each->closeEncoder();
-		hasEncoder=true;
-	}
-	if(!hasEncoder){
+	if(streams.empty()){
 		return;
+	}
+	for(const auto& each:streams){
+		each->closeEncoder();
 	}
 	flush();
 	av_write_trailer(context);
 	avio_close(context->pb);
 	for(auto& each:streams){
 		delete each;
-		each=nullptr;
 	}
+	streams.clear();
 }
 AVOutput::~AVOutput()noexcept{
 	close();

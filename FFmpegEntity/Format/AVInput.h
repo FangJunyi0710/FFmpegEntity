@@ -7,8 +7,9 @@
 namespace myFFmpeg{
 
 class AVInput:public AVFormat{
-	std::array<ReadStream*,AVMEDIA_TYPE_NB> streams{};
+	vector<ReadStream*> streams;
 	Dictionary m_metadata;
+	std::array<vector<int>,AVMEDIA_TYPE_NB> m_streamIndex;
 	AVInput(){}
 public:
 	AVInput(string url);
@@ -17,11 +18,20 @@ public:
 		AVFormat::swap(o);
 		streams.swap(o.streams);
 		m_metadata.swap(o.m_metadata);
+		m_streamIndex.swap(o.m_streamIndex);
 	}
 
-	ReadStream& stream(AVMediaType type){
-		if(!streams[type]){throw CodecError("No such stream");}
-		return *streams[type];
+	ReadStream& operator[](int index){
+		if(index>=int(streams.size()) || index<0){
+			throw FFmpegError("stream index out of range");
+		}
+		return *streams[index];
+	}
+	int index(AVMediaType type,int index=0){
+		if(int(m_streamIndex[type].size())<=index){
+			return -1;
+		}
+		return m_streamIndex[type][index];
 	}
 	Dictionary metadata()const{return m_metadata;}
 };

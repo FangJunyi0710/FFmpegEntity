@@ -13,8 +13,7 @@
 #include <QDateTime>
 #include <QSpinBox>
 #include <QFile>
-#include "AVOutput.h"
-#include "VideoEncoder.h"
+#include "Basic.h"
 
 class GraphicsView : public QGraphicsView {
 	Q_OBJECT

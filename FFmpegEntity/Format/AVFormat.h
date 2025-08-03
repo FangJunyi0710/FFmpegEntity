@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Frame.h"
-#include <array>
 
 namespace myFFmpeg{
 

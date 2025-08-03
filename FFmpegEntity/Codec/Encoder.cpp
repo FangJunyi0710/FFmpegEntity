@@ -29,8 +29,8 @@ Encoder::Encoder(const Params& p){
 	context=avcodec_alloc_context3(codec);
 	context->codec_id = p.id;
 	context->codec_type = avcodec_get_type(p.id);
-	context->bit_rate = p.bit_rate;
-	writeAVDictionary(options,p.opts);
+	context->bit_rate = p.bitRate;
+	writeAVDictionary(options,p.options);
 }
 AVMediaType Encoder::type()const{
 	return context->codec_type;
