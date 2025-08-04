@@ -37,3 +37,4 @@ build
 out/
 perf.data*
 *.code-workspace
+resource/tmp/
