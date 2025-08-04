@@ -61,6 +61,8 @@ public:
 	template<class T>
 	void moveTo(T it){movePoint(map(it));}
 
+	double length()const{if(m_data.empty()){return 0;}return double(m_data.back()->pts + m_data.back()->duration)*timeBase();}
+
 	Dictionary metadata()const{return m_metadata;}
 };
 
@@ -81,6 +83,8 @@ public:
 	
 	vector<Packet> flush()const;
 	void closeEncoder() const;
+
+	double length()const{return m_encoder->currentTime();}
 };
 
 }

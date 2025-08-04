@@ -6,7 +6,7 @@
 using namespace FFmpeg;
 
 int main(){
-	AVInput mp3("resource/打上花火.mp3");
+	AVInput mp3("resource/tmp/打上花火.mp3");
 	auto& video=mp3[mp3.index(AVMEDIA_TYPE_VIDEO)];
 	QImage out=VideoFrame(video.decode(1)[0]);
 
@@ -15,6 +15,7 @@ int main(){
 	for (const auto &[key, value] : metadata){
 		cDebug(key, ":", value);
 	}
+	cDebug("video len: ", mp3[mp3.index(AVMEDIA_TYPE_VIDEO)].length(),", mp3 len: ",mp3[mp3.index(AVMEDIA_TYPE_AUDIO)].length());
 
 	mp3.open("resource/起风了.mpga");
 	AVOutput newmp3("out/out.mp3", {
@@ -23,6 +24,7 @@ int main(){
 	},{},{{{"mimetype","image/jpeg"}}});
 	newmp3[0]<<VideoFrame(out).toFrame();
 	newmp3[1]<<mp3[mp3.index(AVMEDIA_TYPE_AUDIO)].decode(10000);
+	cDebug("0: ",newmp3[0].length()," 1: ",newmp3[1].length());
 	return 0;
 }
 #include "QtSupport.cpp"

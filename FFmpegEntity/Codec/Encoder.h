@@ -33,8 +33,9 @@ public:
 		std::swap(curTime,o.curTime);
 	}
 	COPY(Encoder)=delete;
-	AVMediaType type()const;
 	void configure();
+	AVMediaType type()const;
+	double currentTime()const{return curTime;}
 };
 
 }
