@@ -4,7 +4,7 @@
 #include <cassert>
 #include <iostream>
 
-namespace myFFmpeg{
+namespace FFmpeg{
 
 void writeAVDictionary(AVDictionary*& options,const Dictionary& opts){
 	for(const auto& [key,value]:opts){

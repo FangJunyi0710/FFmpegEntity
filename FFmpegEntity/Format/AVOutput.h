@@ -3,7 +3,7 @@
 #include "Stream.h"
 #include "AVFormat.h"
 
-namespace myFFmpeg{
+namespace FFmpeg{
 
 class AVOutput:public AVFormat{
 	vector<WriteStream*> streams;

@@ -2,7 +2,7 @@
 
 #include "Frame.h"
 
-namespace myFFmpeg{
+namespace FFmpeg{
 
 using std::string;
 

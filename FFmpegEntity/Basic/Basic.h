@@ -5,7 +5,7 @@
 #include <string>
 #include <stdexcept>
 
-namespace myFFmpeg{
+namespace FFmpeg{
 
 template<class T>
 T lim(const T& a,const T& min,const T& max){

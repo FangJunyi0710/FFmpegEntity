@@ -1,7 +1,7 @@
 #include "Decoder.h"
 #include <iostream>
 
-namespace myFFmpeg{
+namespace FFmpeg{
 
 Decoder::Decoder(AVStream* s){
 	if(!s){

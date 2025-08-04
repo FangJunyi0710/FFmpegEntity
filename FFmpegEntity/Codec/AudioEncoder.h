@@ -2,7 +2,7 @@
 
 #include "Encoder.h"
 
-namespace myFFmpeg{
+namespace FFmpeg{
 
 class AudioEncoder:public Encoder{
 protected:

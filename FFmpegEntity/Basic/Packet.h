@@ -6,7 +6,7 @@ extern "C"{
 #include <libavformat/avformat.h>
 }
 
-namespace myFFmpeg{
+namespace FFmpeg{
 
 class Packet{
 	AVPacket* m_data=nullptr;

@@ -9,7 +9,7 @@ extern "C"{
 }
 typedef unsigned int QRgb;
 
-namespace myFFmpeg{
+namespace FFmpeg{
 
 class Color;
 Color operator+(const Color& a,const Color& b);
@@ -55,5 +55,5 @@ public:
 }
 
 namespace std{
-std::ostream& operator<<(std::ostream& out,const myFFmpeg::Color& c);
+std::ostream& operator<<(std::ostream& out,const FFmpeg::Color& c);
 }

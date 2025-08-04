@@ -9,7 +9,7 @@ extern "C"{
 }
 
 class QImage;
-namespace myFFmpeg{
+namespace FFmpeg{
 
 using std::deque;
 

@@ -4,7 +4,7 @@
 #include "AVFormat.h"
 #include <array>
 
-namespace myFFmpeg{
+namespace FFmpeg{
 
 class AVInput:public AVFormat{
 	vector<ReadStream*> streams;

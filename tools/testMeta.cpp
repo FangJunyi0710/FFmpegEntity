@@ -3,7 +3,7 @@
 #include "VideoEncoder.h"
 #include "AudioEncoder.h"
 #include <QImage>
-using namespace myFFmpeg;
+using namespace FFmpeg;
 
 int main(){
 	AVInput mp3("resource/打上花火.mp3");

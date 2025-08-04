@@ -1,5 +1,5 @@
 #include "AVFormat.h"
 
-namespace myFFmpeg{
+namespace FFmpeg{
 
 }

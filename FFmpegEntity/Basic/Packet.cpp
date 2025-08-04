@@ -2,7 +2,7 @@
 #include "Basic.h"
 #include <cassert>
 
-namespace myFFmpeg{
+namespace FFmpeg{
 
 Packet::Packet():m_data(av_packet_alloc()){
     if(!m_data){

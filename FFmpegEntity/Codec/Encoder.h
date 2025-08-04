@@ -2,7 +2,7 @@
 
 #include "Codec.h"
 
-namespace myFFmpeg{
+namespace FFmpeg{
 
 /**
  * 用法：

@@ -2,7 +2,7 @@
 
 #include "Color.h"
 
-namespace myFFmpeg{
+namespace FFmpeg{
 
 class Frame;
 

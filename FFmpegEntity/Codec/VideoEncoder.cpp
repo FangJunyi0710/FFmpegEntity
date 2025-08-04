@@ -4,7 +4,7 @@
 #include <thread>
 #include <atomic>
 
-namespace myFFmpeg {
+namespace FFmpeg {
 
 using std::min;
 

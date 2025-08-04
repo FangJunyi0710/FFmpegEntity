@@ -1,6 +1,6 @@
 #include "AVInput.h"
 
-namespace myFFmpeg{
+namespace FFmpeg{
 
 AVInput::AVInput(string url){
 	if(avformat_open_input(&context,url.c_str(),nullptr,nullptr)){

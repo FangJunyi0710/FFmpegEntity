@@ -1,6 +1,6 @@
 #include "Stream.h"
 
-namespace myFFmpeg {
+namespace FFmpeg {
 
 // ==================== BasicStream ====================
 

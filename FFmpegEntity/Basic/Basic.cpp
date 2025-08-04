@@ -1,5 +1,5 @@
 #include "Basic.h"
 
-namespace myFFmpeg{
+namespace FFmpeg{
 
 }

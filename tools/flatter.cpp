@@ -240,13 +240,13 @@ protected:
 		QImage result(w, h, QImage::Format_ARGB32);
 		QPointF topleft=currentClick[0],bottomleft=currentClick[1],bottomright=currentClick[2],topright=currentClick[3];
 		for(int i=0;i<w;++i){
-			double bx=myFFmpeg::avg(topleft.x(),topright.x(),i*1.0/w),by=myFFmpeg::avg(topleft.y(),topright.y(),i*1.0/w);
-			double ex=myFFmpeg::avg(bottomleft.x(),bottomright.x(),i*1.0/w),ey=myFFmpeg::avg(bottomleft.y(),bottomright.y(),i*1.0/w);
+			double bx=FFmpeg::avg(topleft.x(),topright.x(),i*1.0/w),by=FFmpeg::avg(topleft.y(),topright.y(),i*1.0/w);
+			double ex=FFmpeg::avg(bottomleft.x(),bottomright.x(),i*1.0/w),ey=FFmpeg::avg(bottomleft.y(),bottomright.y(),i*1.0/w);
 			// qDebug()<<bx<<" -> "<<ex<<" "<<by<<" -> "<<ey;
 			
 			for(int j=0;j<h;++j){
-				double curx=myFFmpeg::avg(bx,ex,j*1.0/h);
-				double cury=myFFmpeg::avg(by,ey,j*1.0/h);
+				double curx=FFmpeg::avg(bx,ex,j*1.0/h);
+				double cury=FFmpeg::avg(by,ey,j*1.0/h);
 				result.setPixel(i,j,pixmap.toImage().pixel(curx,cury));
 			}
 		}

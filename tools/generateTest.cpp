@@ -6,7 +6,7 @@
 #include <iostream>
 #include <memory>
 using namespace std;
-using namespace myFFmpeg;
+using namespace FFmpeg;
 
 class AbstractLayer{
 protected:

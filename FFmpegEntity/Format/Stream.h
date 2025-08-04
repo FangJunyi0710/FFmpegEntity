@@ -4,7 +4,7 @@
 #include "Encoder.h"
 #include "Log.h"
 
-namespace myFFmpeg{
+namespace FFmpeg{
 
 class BasicStream{
 	AVRational m_timeBase;

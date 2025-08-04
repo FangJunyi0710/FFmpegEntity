@@ -1,6 +1,6 @@
 #include "Frame.h"
 #include <QImage>
-namespace myFFmpeg{
+namespace FFmpeg{
 
 
 Color::Color(const QRgb& c):Color(qRed(c),qGreen(c),qBlue(c),qAlpha(c)){}

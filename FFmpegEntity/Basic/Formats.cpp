@@ -3,7 +3,7 @@
 #include <map>
 #include <mutex>
 
-namespace myFFmpeg{
+namespace FFmpeg{
 
 bool operator<(const VideoFormat& a,const VideoFormat& b){
 	if(a.pix_fmt!=b.pix_fmt){

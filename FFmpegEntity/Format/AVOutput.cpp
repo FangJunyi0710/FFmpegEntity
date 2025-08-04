@@ -1,6 +1,6 @@
 #include "AVOutput.h"
 
-namespace myFFmpeg{
+namespace FFmpeg{
 
 AVOutput::AVOutput(string filename,const vector<Encoder*>& arg_encoders,const Dictionary& metadata,const vector<Dictionary>& streamMetadatas){
 	cDebug("");
