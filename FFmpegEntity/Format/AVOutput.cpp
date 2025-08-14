@@ -3,7 +3,6 @@
 namespace FFmpeg{
 
 AVOutput::AVOutput(string filename,const vector<Encoder*>& arg_encoders,const Dictionary& metadata,const vector<Dictionary>& streamMetadatas){
-	cDebug("");
 	if(avformat_alloc_output_context2(&context,nullptr,nullptr,filename.c_str())<0){
 		throw FFmpegError("init failed");
 	}
@@ -33,10 +32,10 @@ void AVOutput::flush(){
 	vector<Packet> buffer;
 	for(const auto& each:streams){
 		auto tmp=each->flush();
-		buffer.insert(buffer.end(),tmp.begin(),tmp.end());
+		buffer.insert(buffer.end(),std::make_move_iterator(tmp.begin()),std::make_move_iterator(tmp.end()));
 	}
 	sort(buffer.begin(),buffer.end(),[=](const Packet& a,const Packet& b){
-		return a->dts<b->dts;
+		return a->dts*streams[a->stream_index]->timeBase()<b->dts*streams[b->stream_index]->timeBase();
 	});
 	for(auto each:buffer){
 		av_interleaved_write_frame(context,*each);

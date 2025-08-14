@@ -42,7 +42,7 @@ public:
 	int x=0,y=0;
 	CursorMove(){}
 	CursorMove(int xx,int yy):x(xx),y(yy){}
-	inline operator std::string()const override{
+	operator std::string()const override{
 		std::string ret;
 		if(x>0){
 			ret+="\033["+std::to_string(x)+"B";
@@ -69,7 +69,7 @@ class CursorSet: public Char033{
 public:
 	uint x,y;
 	CursorSet(uint xx,uint yy):x(xx),y(yy){}
-	inline operator std::string()const override{
+	operator std::string()const override{
 		return "\033["+std::to_string(x+1)+";"+std::to_string(y+1)+"H";
 	}
 };
@@ -82,7 +82,7 @@ class ScreenScroll: public Char033{
 public:
 	int line=0;
 	ScreenScroll(int l=0):line(l){}
-	inline operator std::string()const override{
+	operator std::string()const override{
 		if(line>0){
 			return "\033["+std::to_string(line)+"S";
 		}
@@ -98,7 +98,7 @@ public:
  */
 class CursorSave: public Char033{
 public:
-	inline operator std::string()const override{
+	operator std::string()const override{
 		return "\033[s";
 	}
 };
@@ -108,7 +108,7 @@ public:
  */
 class CursorLoad: public Char033{
 public:
-	inline operator std::string()const override{
+	operator std::string()const override{
 		return "\033[u";
 	}
 };
@@ -118,7 +118,7 @@ public:
  */
 class CursorHide: public Char033{
 public:
-	inline operator std::string()const override{
+	operator std::string()const override{
 		return "\033[?25l";
 	}
 };
@@ -128,7 +128,7 @@ public:
  */
 class CursorShow: public Char033{
 public:
-	inline operator std::string()const override{
+	operator std::string()const override{
 		return "\033[?25h";
 	}
 };
@@ -138,7 +138,7 @@ public:
  */
 class ClearBackward: public Char033{
 public:
-	inline operator std::string()const override{
+	operator std::string()const override{
 		return "\033[J";
 	}
 };
@@ -148,7 +148,7 @@ public:
  */
 class ClearForward: public Char033{
 public:
-	inline operator std::string()const override{
+	operator std::string()const override{
 		return "\033[1J";
 	}
 };
@@ -158,7 +158,7 @@ public:
  */
 class ClearAll: public Char033{
 public:
-	inline operator std::string()const override{
+	operator std::string()const override{
 		return "\033[2J";
 	}
 };
@@ -168,7 +168,7 @@ public:
  */
 class ClearLineBackward: public Char033{
 public:
-	inline operator std::string()const override{
+	operator std::string()const override{
 		return "\033[K";
 	}
 };
@@ -178,7 +178,7 @@ public:
  */
 class ClearLineForward: public Char033{
 public:
-	inline operator std::string()const override{
+	operator std::string()const override{
 		return "\033[1K";
 	}
 };
@@ -188,7 +188,7 @@ public:
  */
 class ClearLine: public Char033{
 public:
-	inline operator std::string()const override{
+	operator std::string()const override{
 		return "\033[2K";
 	}
 };
@@ -201,7 +201,7 @@ class TerminalTitle: public Char033{
 public:
 	std::string title;
 	TerminalTitle(const std::string& t):title(t){}
-	inline operator std::string()const override{
+	operator std::string()const override{
 		return "\033]0;"+title+"\007";
 	}
 };
@@ -215,7 +215,7 @@ class TerminalSize: public Char033{
 public:
 	uint rows,cols;
 	TerminalSize(uint r,uint c):rows(r),cols(c){}
-	inline operator std::string()const override{
+	operator std::string()const override{
 		return "\033[8;"+std::to_string(rows)+";"+std::to_string(cols)+"t";
 	}
 };
@@ -228,7 +228,7 @@ class InsertSpace: public Char033{
 public:
 	uint count;
 	InsertSpace(uint c):count(c){}
-	inline operator std::string()const override{
+	operator std::string()const override{
 		return "\033["+std::to_string(count)+"@";
 	}
 };
@@ -241,7 +241,7 @@ class InsertLine: public Char033{
 public:
 	uint count;
 	InsertLine(uint c):count(c){}
-	inline operator std::string()const override{
+	operator std::string()const override{
 		return "\033["+std::to_string(count)+"L";
 	}
 };
@@ -251,7 +251,7 @@ public:
  */
 class Bell: public Char033{
 public:
-	inline operator std::string()const override{
+	operator std::string()const override{
 		return "\007";
 	}
 };
@@ -264,7 +264,7 @@ class DeleteText: public Char033{
 public:
 	uint count;
 	DeleteText(uint c):count(c){}
-	inline operator std::string()const override{
+	operator std::string()const override{
 		return "\033["+std::to_string(count)+"P";
 	}
 };
@@ -277,7 +277,7 @@ class DeleteLine: public Char033{
 public:
 	uint count;
 	DeleteLine(uint c):count(c){}
-	inline operator std::string()const override{
+	operator std::string()const override{
 		return "\033["+std::to_string(count)+"M";
 	}
 };
@@ -288,7 +288,7 @@ public:
  */
 class Reset: public Char033{
 public:
-	inline operator std::string()const override{
+	operator std::string()const override{
 		return "\033c";
 	}
 };
@@ -303,7 +303,7 @@ public:
     enum Shape { Block = 1, Underline = 3, Bar = 5 };
     Shape shape;
     CursorShape(Shape s) : shape(s) {}
-    inline operator std::string() const override {
+    operator std::string() const override {
         return "\033[" + std::to_string(static_cast<int>(shape)) + " q";
     }
 };
@@ -317,7 +317,7 @@ class SwitchScreen: public Char033{
 public:
 	bool enable;
 	SwitchScreen(bool e):enable(e){}
-	inline operator std::string()const override{
+	operator std::string()const override{
 		return enable ? "\033[?1049h" : "\033[?1049l";
 	}
 };
@@ -398,7 +398,7 @@ public:
 	 * @brief 生成ANSI转义序列
 	 * @return 返回格式化的ANSI转义序列字符串
 	 */
-	inline operator std::string()const override{
+	operator std::string()const override{
 		std::string ret="\033[0";
 		int temp[]={int(underline),int(brightness),(italic?3:-1),(deleted?9:-1),(flicker?5:-1),(reversed?7:-1),
 		int(color),(color==cRGB?2:-1),(color==cRGB?r:-1),(color==cRGB?g:-1),(color==cRGB?b:-1),
@@ -418,7 +418,7 @@ public:
 	 * @param o 另一个样式
 	 * @return 返回组合后的新样式
 	 */
-	inline constexpr Pattern operator+(const Pattern& o)const{
+	constexpr Pattern operator+(const Pattern& o)const{
 		auto ret=o;
 		if(ret.underline==lNone){
 			ret.underline=underline;
@@ -453,7 +453,7 @@ public:
 	 * @return 返回输出流
 	 */
 	template<class...Args>
-	inline std::ostream& operator()(std::ostream& out,Args...args)const{
+	std::ostream& operator()(std::ostream& out,Args...args)const{
 		out<<*this;
 		return (out<<...<<args)<<Pattern();
 	}

@@ -12,7 +12,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # 添加编译选项
-add_compile_options(-Wall -Werror -Wextra -O0 -DNDEBUG -g -DLOG)
+add_compile_options(-Wall -Werror -Wextra -Ofast -DNDEBUG -g -DLOG -pg)
 include_directories(${CMAKE_SOURCE_DIR})
 
 # 查找Qt (支持Qt5和Qt6)

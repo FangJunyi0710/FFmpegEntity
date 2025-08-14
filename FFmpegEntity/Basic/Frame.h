@@ -64,8 +64,8 @@ public:
 	void setWidth(int w);
 	void setHeight(int h);
 	
-	Color &pixel(int w, int h) { return m_data[h * m_width + w]; }
-	const Color &pixel(int w, int h) const { return m_data[h * m_width + w]; }
+	Color &pixel(int w, int h) { if(w<0 || h<0 || w>=m_width || h>=m_height){throw FFmpegError("pixel() Index overflow");}return m_data[h * m_width + w]; }
+	const Color &pixel(int w, int h) const { if(w<0 || h<0 || w>=m_width || h>=m_height){throw FFmpegError("pixel() Index overflow");}return m_data[h * m_width + w]; }
 	Color* data(){return m_data;}
 	const Color* data()const{return m_data;}
 

@@ -18,6 +18,8 @@ class VideoEncoder::Handler {
 	deque<Frame> buffer;
 	vector<Frame> converted;
 	VideoFormat outputFormat;
+
+	ull indexIn=0,indexOut=0;
 public:
 	Handler(VideoFormat oFormat): outputFormat(oFormat) {
 		th = vector<std::thread>(std::thread::hardware_concurrency());
@@ -35,6 +37,7 @@ public:
 					locker.unlock();
 
 					auto res = Swscale(cur, outputFormat).scale(cur);
+					res->pts = cur->pts;
 
 					locker.lock();
 					converted.push_back(res);
@@ -46,11 +49,13 @@ public:
 	void push(const vector<Frame>& source) {
 		std::lock_guard<std::mutex> locker(lock);
 		for(const auto& i : source) {
-			if(i == outputFormat) {
-				converted.push_back(i);
+			auto tmp=i;
+			tmp->pts=++indexIn;
+			if(tmp == outputFormat) {
+				converted.push_back(tmp);
 				continue;
 			}
-			buffer.push_back(i);
+			buffer.push_back(tmp);
 		}
 
 		if(buffer.size() >= std::thread::hardware_concurrency()) {
@@ -60,9 +65,23 @@ public:
 		}
 	}
 	vector<Frame> pop() {
-		std::lock_guard<std::mutex> locker(lock);
+		std::unique_lock<std::mutex> locker(lock);
 		auto ret = converted;
 		converted.clear();
+		locker.unlock();
+		std::sort(ret.begin(),ret.end(),[=](const Frame& a,const Frame& b){return a->pts<b->pts;});
+		for(ull i=0;i<ret.size();++i){
+			if(ull(ret[i]->pts)!=indexOut+i+1){
+				locker.lock();
+				converted.insert(converted.end(),ret.begin()+i,ret.end());
+				locker.unlock();
+				ret.erase(ret.begin()+i,ret.end());
+				break;
+			}
+		}
+		if(!ret.empty()){
+			indexOut=ret.back()->pts;
+		}
 		return ret;
 	}
 	vector<Frame> flush() {

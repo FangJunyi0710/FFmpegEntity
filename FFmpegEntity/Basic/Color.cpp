@@ -10,7 +10,7 @@ namespace FFmpeg{
 AVPixelFormat Color::PIX_FMT=AV_PIX_FMT_RGBA;
 
 // a 在上，b 在下
-Color operator+(const Color& a,const Color& b){
+Color operator+(const Color& b,const Color& a){
 	Color::DATA aalpha=a.alpha();
 	if(aalpha==Color::max || b.alpha()==0){
 		return a;

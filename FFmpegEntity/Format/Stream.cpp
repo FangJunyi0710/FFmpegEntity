@@ -73,7 +73,7 @@ vector<Frame> ReadStream::decode(const cIT &end) {
 			[](const Frame& f, int64_t t) { return f->pts < t; });
 
 		// 4.2 缓存超出当前范围的帧
-		cache.insert(cache.end(), upper, frames.end());
+		cache.insert(cache.end(), std::make_move_iterator(upper), std::make_move_iterator(frames.end()));
 
 		// 4.3 处理缓存中的帧
 		auto cacheLower = std::lower_bound(cache.begin(), cache.end(), ptsBegin,
@@ -121,7 +121,7 @@ void ReadStream::flushDecoder(){
 	m_decoder->reset();
 
 	auto tmp=m_decoder->receive();
-	cache.insert(cache.end(), tmp.begin(), tmp.end());
+	cache.insert(cache.end(), std::make_move_iterator(tmp.begin()), std::make_move_iterator(tmp.end()));
 	if(point!=m_data.end()){
 		cache.erase(cache.begin(), std::lower_bound(cache.begin(), cache.end(), (*point)->pts,
 			[](const Frame& f, int64_t t) { return f->pts < t; })); 

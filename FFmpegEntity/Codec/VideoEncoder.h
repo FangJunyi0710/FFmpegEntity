@@ -14,7 +14,7 @@ protected:
 	vector<Frame> convertFormat(const vector<Frame>& source)override;
 	vector<Frame> flushBuffer()override;
 public:
-	VideoEncoder(const Encoder::Params&,VideoFormat format,int fps_=30);
+	VideoEncoder(const Encoder::Params&,VideoFormat format,int fps_);
 	~VideoEncoder()noexcept;
 	SWAP(VideoEncoder){
 		Encoder::swap(o);

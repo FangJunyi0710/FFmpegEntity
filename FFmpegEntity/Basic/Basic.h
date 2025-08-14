@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <stdexcept>
+#include "Log.h"
 
 namespace FFmpeg{
 
@@ -33,27 +34,27 @@ using ushort=unsigned short;
 
 class FFmpegError:public std::runtime_error{
 public:
-	FFmpegError(const string& error):std::runtime_error(error){}
+	FFmpegError(const string& error)noexcept:std::runtime_error(error){}
 };
 
 class FileError:public FFmpegError{
 public:
-	FileError(const string& error):FFmpegError(error){}
+	FileError(const string& error)noexcept:FFmpegError(error){}
 };
 
 class ConvertError:public FFmpegError{
 public:
-	ConvertError(const string& error):FFmpegError(error){}
+	ConvertError(const string& error)noexcept:FFmpegError(error){}
 };
 
 class CodecError:public ConvertError{
 public:
-	CodecError(const string& error):ConvertError(error){}
+	CodecError(const string& error)noexcept:ConvertError(error){}
 };
 
 class MemoryError:public FFmpegError,std::bad_alloc{
 public:
-	MemoryError(const string& error):FFmpegError(error){}
+	MemoryError(const string& error)noexcept:FFmpegError(error){}
 };
 
 }

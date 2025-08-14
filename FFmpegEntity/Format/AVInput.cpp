@@ -29,40 +29,4 @@ void AVInput::open(string url){
 	swap(tmp);
 }
 
-// void AVInput::Stream::pushBuffer(const vector<Frame>& frames){
-// 	buffer.insert(buffer.end(),frames.begin(),frames.end());
-// }
-// bool AVInput::Stream::isEmptyBuffer(){
-// 	if(!buffer.empty() || !packets.empty()){
-// 		return false;
-// 	}
-// 	decoder.end();
-// 	pushBuffer(decoder.receive());
-// 	return buffer.empty();
-// }
-
-
-// bool AVInput::Stream::decodeOne(){
-// 	while(buffer.empty()){
-// 		if(isEmptyBuffer()){
-// 			return false;
-// 		}
-// 		if(!buffer.empty()){
-// 			return true;
-// 		}
-// 		decoder.send({packets.front()});
-// 		packets.pop_front();
-// 		pushBuffer(decoder.receive());
-// 	}
-// 	return true;
-// }
-// vector<Frame> AVInput::Stream::popBuffer(int maxCount){
-// 	vector<Frame> ret;
-// 	while(decodeOne() && maxCount--){
-// 		ret.push_back(buffer.front());
-// 		buffer.pop_front();
-// 	}
-// 	return ret;
-// }
-
 }

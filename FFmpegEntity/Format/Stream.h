@@ -2,7 +2,6 @@
 
 #include "Decoder.h"
 #include "Encoder.h"
-#include "Log.h"
 
 namespace FFmpeg{
 
@@ -55,7 +54,7 @@ public:
 	}
 	~ReadStream()noexcept;
 
-	vector<Frame> decode(double len);
+	vector<Frame> decode(double len=1e10);
 
 	double currentTime() const;
 	template<class T>

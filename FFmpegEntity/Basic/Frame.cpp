@@ -97,7 +97,6 @@ FFmpeg::Frame VideoFrame::toFrame()const{
 	ret->width = m_width;
 	ret->height = m_height;
 	ret->format = Color::PIX_FMT;
-	
 	if(av_frame_get_buffer(*ret, 0) < 0){
 		throw MemoryError("Failed to allocate frame buffer");
 	}

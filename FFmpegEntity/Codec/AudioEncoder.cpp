@@ -8,7 +8,7 @@ double AudioEncoder::step()const{
 vector<Frame> AudioEncoder::convertFormat(const vector<Frame>& source){
 	buffer.push(source);
 	if(context->frame_size==0){
-		context->frame_size=1024;
+		context->frame_size=1024; // 默认帧大小
 	}
 	return buffer.pop(context->frame_size,buffer.size()/context->frame_size);
 }
@@ -22,6 +22,7 @@ AudioEncoder::AudioEncoder(const Encoder::Params& p, AudioFormat format):Encoder
 	context->sample_rate=format.sampleRate;
 
 	context->time_base={1,format.sampleFormat};
+	context->frame_size=1024; // 默认帧大小
 }
 
 }

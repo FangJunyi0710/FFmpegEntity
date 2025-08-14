@@ -15,6 +15,9 @@ public:
 		streams.swap(o.streams);
 	}
 	WriteStream& operator[](int index){
+		if(index>=int(streams.size()) || index<0){
+			throw FFmpegError("stream index out of range");
+		}
 		return *streams[index];
 	}
 	void flush();
