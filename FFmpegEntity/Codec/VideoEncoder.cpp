@@ -65,9 +65,9 @@ public:
 		}
 	}
 	vector<Frame> pop() {
+		vector<Frame> ret;
 		std::unique_lock<std::mutex> locker(lock);
-		auto ret = converted;
-		converted.clear();
+		ret.swap(converted);
 		locker.unlock();
 		std::sort(ret.begin(),ret.end(),[=](const Frame& a,const Frame& b){return a->pts<b->pts;});
 		for(ull i=0;i<ret.size();++i){

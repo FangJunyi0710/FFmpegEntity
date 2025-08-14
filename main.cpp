@@ -119,16 +119,16 @@ Layer timeline(){
 		const int hpos=h-barHeight;
 		for(int i=0;i<(t-tBegin)/tLen*w;++i){
 			for(int j=hpos;j<h;++j){
-				f.pixel(i,j)+=Color(200,200,200);
+				f.setPixel(i,j,Color(200,200,200));
 			}
 		}
 		for(int i=0;i<w;++i){
-			f.pixel(i,hpos)+=Color(255,255,255);
+			f.setPixel(i,hpos,Color(255,255,255));
 		}
 		auto text=textToQImage(QString::fromStdString(formatTick(t)),QFont("Ubuntu Mono",TextSize),Qt::white);// 
 		for(int i=0;i<text.width();++i){
 			for(int j=0;j<text.height();++j){
-				f.pixel(f.width()-text.width()+i,f.height()-text.height()-barHeight+j)+=text.pixel(i,j);
+				f.setPixel(f.width()-text.width()+i,f.height()-text.height()-barHeight+j,text.pixel(i,j));
 			}
 		}
 	});

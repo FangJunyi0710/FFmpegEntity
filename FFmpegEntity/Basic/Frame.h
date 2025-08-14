@@ -39,35 +39,64 @@ public:
 };
 
 class VideoFrame{
-	int m_width = 0;
-	int m_height = 0;
-	Color* m_data;
+	struct Impl{
+		int width = 0;
+		int height = 0;
+		Color* data=nullptr;
+		Impl(){}
+		Impl(int width_,int height_,const Color& color=Color()):width(std::max(0,width_)),height(std::max(0,height_)),data(width*height>0 ? reinterpret_cast<Color*>(new Color::DATA[width*height]) : nullptr){
+			if(data){std::fill_n(reinterpret_cast<Color::DATA*>(data), width*height, color.data);}
+		}
+		void ref(){++refCount;}
+		void unref(){--refCount;if(!refCount){delete this;}}
+		bool writable(){return refCount==1;}
+	private:
+		uint refCount=1;
+		~Impl(){delete[] data;}
+	};
+	Impl* impl;
+	void copyImpl(){
+		cTrace("copy()");
+		Impl* newImpl=new Impl(impl->width,impl->height);
+		memcpy(newImpl->data, impl->data, width() * height() * sizeof(Color));
+		impl->unref();
+		impl=newImpl;
+	}
 public:
 	SWAP(VideoFrame){
-		std::swap(m_width,o.m_width);
-		std::swap(m_height,o.m_height);
-		std::swap(m_data,o.m_data);
+		std::swap(impl,o.impl);
 	}
-	COPY(VideoFrame) : VideoFrame(o.m_width,o.m_height){
-		memcpy(m_data, o.m_data, m_width * m_height * sizeof(Color));
+	COPY(VideoFrame){
+		impl=o.impl;
+		o.impl->ref();
+		cTrace("ref()");
 	}
 	CLONE(clone, VideoFrame, VideoFrame *)
-	~VideoFrame()noexcept{delete[] m_data;}
+	~VideoFrame()noexcept{impl->unref();}
 
 	VideoFrame();
 	VideoFrame(int width,int height,const Color& color=Color());
 	VideoFrame(Frame frame);
 	void clear();
-	int width()const {return m_width;}
-	int height()const {return m_height;}
-	bool empty()const {return !m_width || !m_height;}
-	void setWidth(int w);
-	void setHeight(int h);
+	int width()const {return impl->width;}
+	int height()const {return impl->height;}
+	bool empty()const {return !width() || !height();}
 	
-	Color &pixel(int w, int h) { if(w<0 || h<0 || w>=m_width || h>=m_height){throw FFmpegError("pixel() Index overflow");}return m_data[h * m_width + w]; }
-	const Color &pixel(int w, int h) const { if(w<0 || h<0 || w>=m_width || h>=m_height){throw FFmpegError("pixel() Index overflow");}return m_data[h * m_width + w]; }
-	Color* data(){return m_data;}
-	const Color* data()const{return m_data;}
+	const Color &pixel(int w, int h) const { 
+		if(w<0 || h<0 || w>=width() || h>=height()){
+			throw FFmpegError("pixel() Index overflow");
+		}
+		return impl->data[h * width() + w]; 
+	}
+	void setPixel(int w, int h,const Color& newColor) { 
+		if(w<0 || h<0 || w>=width() || h>=height()){
+			throw FFmpegError("pixel() Index overflow");
+		}
+		if(!impl->writable()){
+			copyImpl();
+		} 
+		impl->data[h * width() + w]=newColor; 
+	}
 
 	VideoFormat format() const;
 	Frame toFrame()const;

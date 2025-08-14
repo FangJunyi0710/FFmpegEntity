@@ -22,90 +22,45 @@ void Frame::unref()const{
 	av_frame_unref(m_data);
 }
 
-VideoFrame::VideoFrame():m_width(0),m_height(0),m_data(nullptr){}
-VideoFrame::VideoFrame(int width,int height,const Color& color):
-	m_width(std::max(0,width)),
-	m_height(std::max(0,height)),
-	m_data(m_width*m_height>0 ? reinterpret_cast<Color*>(new Color::DATA[m_width*m_height]) : nullptr)
-{
-	if(m_data){
-		// 直接填充内存，避免多次调用Color构造函数
-		std::fill_n(reinterpret_cast<Color::DATA*>(m_data), m_width*m_height, color.data);
-	}
-}
+VideoFrame::VideoFrame():impl(new Impl){}
+VideoFrame::VideoFrame(int width,int height,const Color& color):impl(new Impl(width,height,color)){}
 
-VideoFrame::VideoFrame(FFmpeg::Frame frame):
-	m_width(frame->width),
-	m_height(frame->height),
-	m_data(m_width*m_height>0 ? new Color[m_width*m_height] : nullptr)
-{
-	if(!m_data) return;
+VideoFrame::VideoFrame(FFmpeg::Frame frame):impl(new Impl(frame->width,frame->height)){
+	if(!impl->data){return;}
 	
-	frame=FFmpeg::Swscale(frame,{m_width,m_height,Color::PIX_FMT}).scale(frame);
+	frame=FFmpeg::Swscale(frame,format()).scale(frame);
 	
-	for(int i=0;i<m_height;++i){
-		for(int j=0;j<m_width;++j){
+	for(int i=0;i<height();++i){
+		for(int j=0;j<width();++j){
 			const Color::T* pixel=reinterpret_cast<const Color::T*>(
 				frame->data[0]+frame->linesize[0]*i+4*sizeof(Color::T)*j);
-			m_data[i*m_width+j]=Color(pixel[0],pixel[1],pixel[2],pixel[3]);
+			impl->data[i*width()+j]=Color(pixel[0],pixel[1],pixel[2],pixel[3]);
 		}
 	}
 }
 
 void VideoFrame::clear(){
-	m_width = 0;
-	m_height = 0;
-	delete[] m_data;
-	m_data=nullptr;
-}
-void VideoFrame::setWidth(int w){
-	w = max(0, w);
-	if(w == m_width) return;
-	
-	auto newData = w*m_height > 0 ? new Color[w*m_height] : nullptr;
-	if(newData && m_data){
-		for(int i=0; i<min(m_height, m_height); ++i){
-			for(int j=0; j<min(m_width, w); ++j){
-				newData[i*w + j] = m_data[i*m_width + j];
-			}
-		}
-	}
-	delete[] m_data;
-	m_data=newData;
-	m_width = w;
-}
-
-void VideoFrame::setHeight(int h){
-	h = max(0, h);
-	if(h == m_height) return;
-	
-	auto newData = m_width*h > 0 ? new Color[m_width*h] : nullptr;
-	if(newData && m_data){
-		memcpy(newData, m_data, m_width*min(m_height, h)*sizeof(Color));
-	}
-	delete[] m_data;
-	m_data=newData;
-	m_height = h;
+	swap(VideoFrame());
 }
 
 FFmpeg::VideoFormat VideoFrame::format()const{
-	return {m_width, m_height, Color::PIX_FMT};
+	return {width(), height(), Color::PIX_FMT};
 }
 
 FFmpeg::Frame VideoFrame::toFrame()const{
 	FFmpeg::Frame ret;
-	ret->width = m_width;
-	ret->height = m_height;
+	ret->width = width();
+	ret->height = height();
 	ret->format = Color::PIX_FMT;
 	if(av_frame_get_buffer(*ret, 0) < 0){
 		throw MemoryError("Failed to allocate frame buffer");
 	}
 	
-	if(m_data){
-		for(int i=0; i<m_height; ++i){
+	if(impl->data){
+		for(int i=0; i<height(); ++i){
 			memcpy(ret->data[0] + ret->linesize[0]*i, 
-				  &m_data[i*m_width], 
-				  min(static_cast<size_t>(ret->linesize[0]), m_width*sizeof(Color)));
+				  &impl->data[i*width()], 
+				  min(static_cast<size_t>(ret->linesize[0]), width()*sizeof(Color)));
 		}
 	}
 	return ret;

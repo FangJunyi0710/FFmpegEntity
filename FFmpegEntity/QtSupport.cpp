@@ -11,7 +11,7 @@ Color::operator QRgb()const{
 VideoFrame::VideoFrame(const QImage& img):VideoFrame(img.width(),img.height()){
 	for(int i=0;i<width();++i){
 		for(int j=0;j<height();++j){
-			pixel(i,j)=img.pixel(i,j);
+			setPixel(i,j,img.pixel(i,j));
 		}
 	}
 }
