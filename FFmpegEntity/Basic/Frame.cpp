@@ -31,11 +31,9 @@ VideoFrame::VideoFrame(FFmpeg::Frame frame):impl(new Impl(frame->width,frame->he
 	frame=FFmpeg::Swscale(frame,format()).scale(frame);
 	
 	for(int i=0;i<height();++i){
-		for(int j=0;j<width();++j){
-			const Color::T* pixel=reinterpret_cast<const Color::T*>(
-				frame->data[0]+frame->linesize[0]*i+4*sizeof(Color::T)*j);
-			impl->data[i*width()+j]=Color(pixel[0],pixel[1],pixel[2],pixel[3]);
-		}
+		memcpy(&impl->data[i*width()], 
+			frame->data[0] + frame->linesize[0]*i, 
+			min(static_cast<size_t>(frame->linesize[0]), width()*sizeof(Color)));
 	}
 }
 

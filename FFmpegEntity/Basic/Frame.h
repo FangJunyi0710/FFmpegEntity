@@ -96,6 +96,15 @@ public:
 			copyImpl();
 		} 
 		impl->data[h * width() + w]=newColor; 
+	}	
+	void addToPixel(int w, int h,const Color& addition) { 
+		if(w<0 || h<0 || w>=width() || h>=height()){
+			throw FFmpegError("pixel() Index overflow");
+		}
+		if(!impl->writable()){
+			copyImpl();
+		} 
+		impl->data[h * width() + w]+=addition; 
 	}
 
 	VideoFormat format() const;

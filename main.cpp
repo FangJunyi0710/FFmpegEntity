@@ -17,32 +17,38 @@
 using namespace std;
 using namespace FFmpeg;
 
-class AbstractLayer{
-protected:
-	virtual void generate(VideoFrame& frame,double tick)=0;
+class Layer{
 public:
-	void produce(VideoFrame& frame,double tick){
-		generate(frame,tick);
-	}
-	virtual ~AbstractLayer()=default;
-};
-class Layer:public AbstractLayer{
-	deque<function<void(VideoFrame&,double&)>> gen;
-protected:
-	void generate(VideoFrame& frame,double tick)override{
-		for(auto& each:gen){
-			each(frame,tick);
+	struct Params{
+		double tick;
+	};
+	using Function=function<void(VideoFrame&,const Params&)>;
+	Layer(const Function& func):painters{func}{}
+	Layer(const deque<Function>& funcs_={}):painters(funcs_){}
+	Layer(const vector<Layer>& layers):painters() {
+		for(const auto& layer:layers){
+			append(layer);
 		}
 	}
-public:
-	Layer()=default;
-	Layer(const deque<function<void(VideoFrame&,double&)>>& funcs):gen(funcs){}
-	void prepend(const function<void(VideoFrame&,double&)>& func){
-		gen.push_front(func);
+	void prepend(const Layer& layer){
+		painters.insert(painters.begin(),layer.painters.begin(),layer.painters.end());
 	}
-	void append(const function<void(VideoFrame&,double&)>& func){
-		gen.push_back(func);
+	void prepend(const Function& func){
+		painters.push_front(func);
 	}
+	void append(const Layer& layer){
+		painters.insert(painters.end(),layer.painters.begin(),layer.painters.end());
+	}
+	void append(const Function& func){
+		painters.push_back(func);
+	}
+	void paint(VideoFrame& frame,const Params& params){
+		for(auto& each:painters){
+			each(frame,params);
+		}
+	}
+private:
+	deque<Function> painters;
 };
 
 QSize calculateImageSize(const QString& text, const QFont& font) {
@@ -111,13 +117,12 @@ string formatTick(double tick){
 
 // 进度条
 Layer timeline(){
-	Layer layer;
-	layer.append([=](VideoFrame& f,double& t){
+	Layer layer([=](VideoFrame& f,const Layer::Params& p){
 		const int barHeight=20;// 进度条高度
 		const int TextSize=20;
 		const int w=f.width(),h=f.height();
 		const int hpos=h-barHeight;
-		for(int i=0;i<(t-tBegin)/tLen*w;++i){
+		for(int i=0;i<(p.tick-tBegin)/tLen*w;++i){
 			for(int j=hpos;j<h;++j){
 				f.setPixel(i,j,Color(200,200,200));
 			}
@@ -125,10 +130,10 @@ Layer timeline(){
 		for(int i=0;i<w;++i){
 			f.setPixel(i,hpos,Color(255,255,255));
 		}
-		auto text=textToQImage(QString::fromStdString(formatTick(t)),QFont("Ubuntu Mono",TextSize),Qt::white);// 
+		auto text=textToQImage(QString::fromStdString(formatTick(p.tick)),QFont("Ubuntu Mono",TextSize),Qt::white);// 
 		for(int i=0;i<text.width();++i){
 			for(int j=0;j<text.height();++j){
-				f.setPixel(f.width()-text.width()+i,f.height()-text.height()-barHeight+j,text.pixel(i,j));
+				f.setPixel(f.width()-text.width()+i,f.height()-text.height()-barHeight+j,Color(text.pixel(i,j)));
 			}
 		}
 	});
@@ -145,7 +150,7 @@ int main(int argc, char *argv[]) {
 	AVInput bgm("resource/起风了.mpga");
 	output[1]<<bgm[bgm.index(AVMEDIA_TYPE_AUDIO)].decode();
 	
-	vector<Layer> layer{
+	Layer layer{
 		timeline()
 	};
 
@@ -155,10 +160,8 @@ int main(int argc, char *argv[]) {
 		}
 		double tick=time2tick(i/30.0);
 
-		VideoFrame frame(1920,1080,Color());
-		for(int j=0;j<(int)layer.size();++j){
-			layer[j].produce(frame,tick);
-		}
+		VideoFrame frame(1920,1080);
+		layer.paint(frame,{.tick=tick});
 
 		output[0]<<frame.toFrame();
 	}
