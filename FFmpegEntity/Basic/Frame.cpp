@@ -68,22 +68,20 @@ FFmpeg::Frame VideoFrame::toFrame(FFmpeg::VideoFormat resFormat)const{
 }
 
 void AudioBuffer::flushConverter(){
-    std::vector<std::unique_ptr<uint8_t[]>> buffers;
-    std::unique_ptr<uint8_t*[]> buf(new uint8_t*[m_format.channelLayout.nb_channels]);
-    
-    int len=converter.samplesCount();
-    for(int i=0;i<m_format.channelLayout.nb_channels;++i){
-        buffers.emplace_back(new uint8_t[len*sampleBytes()]);
-        buf[i] = buffers.back().get();
-    }
-    
-    converter.receive(buf.get(), len);
-    
-    for(int i=0;i<m_format.channelLayout.nb_channels;++i){
-        for(int j=0;j<len;++j){
-            data[i].push_back(vector<uint8_t>(buf[i]+j*sampleBytes(), buf[i]+(j+1)*sampleBytes()));
-        }
-    }
+	std::vector<std::unique_ptr<uint8_t[]>> buffers;
+	std::unique_ptr<uint8_t*[]> buf(new uint8_t*[m_format.channelLayout.nb_channels]);
+	
+	int len=converter.samplesCount();
+	for(int i=0;i<m_format.channelLayout.nb_channels;++i){
+		buffers.emplace_back(new uint8_t[len*sampleBytes()]);
+		buf[i] = buffers.back().get();
+	}
+	
+	converter.receive(buf.get(), len);
+	
+	for(int i=0;i<m_format.channelLayout.nb_channels;++i){
+		data[i].insert(data[i].end(),buf[i], buf[i]+len*sampleBytes());
+	}
 }
 AudioBuffer::AudioBuffer(FFmpeg::AudioFormat fmt):
 	m_format(fmt),data(m_format.channelLayout.nb_channels),curFormat(m_format),converter(curFormat,m_format){}
@@ -96,44 +94,28 @@ void AudioBuffer::push(const vector<FFmpeg::Frame>& frames){
 			flushConverter();
 			converter=FFmpeg::SwResample(frame,m_format);
 		}
-        converter.send(frame->data,frame->nb_samples);
+		converter.send(frame->data,frame->nb_samples);
 	}
-}
-int AudioBuffer::size()const{
-	if(data.empty()){
-		return 0;
-	}
-	return data[0].size()+converter.samplesCount();
-}
-FFmpeg::AudioFormat AudioBuffer::format()const{
-	return m_format;
-}
-int AudioBuffer::sampleBytes()const{
-	return av_get_bytes_per_sample(m_format.sampleFormat);
 }
 FFmpeg::Frame AudioBuffer::pop(int frameSize){
 	frameSize=std::min(size(),frameSize);
 	if(frameSize==0){
 		return Frame();
 	}
-	if(int(data[0].size())<frameSize){
+	if(int(data[0].size())<frameSize*sampleBytes()){
 		flushConverter();
 	}
 	FFmpeg::Frame ret;
-    ret->ch_layout=m_format.channelLayout;
-    ret->sample_rate=m_format.sampleRate;
-    ret->format=m_format.sampleFormat;
-    ret->nb_samples=frameSize;
-    if(av_frame_get_buffer(*ret,0)<0){
+	ret->ch_layout=m_format.channelLayout;
+	ret->sample_rate=m_format.sampleRate;
+	ret->format=m_format.sampleFormat;
+	ret->nb_samples=frameSize;
+	if(av_frame_get_buffer(*ret,0)<0){
 		throw MemoryError("Failed to allocate frame buffer");
 	}
 	for(int i=0;i<m_format.channelLayout.nb_channels;++i){
-		for(int j=0;j<frameSize;++j){
-			for(int k=0;k<sampleBytes();++k){
-                ret->data[i][j*sampleBytes()+k]=data[i].front()[k];
-			}
-			data[i].pop_front();
-		}
+		std::copy_n(data[i].begin(),frameSize*sampleBytes(),ret->data[i]);
+		data[i].erase(data[i].begin(),data[i].begin()+frameSize*sampleBytes());
 	}
 	return ret;
 }

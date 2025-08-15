@@ -116,17 +116,19 @@ public:
 };
 
 class AudioBuffer{
+	mutable uint sampleBytes_=0;
 	AudioFormat m_format;
-	vector<deque<vector<uint8_t>>> data;
+	vector<deque<uint8_t>> data;
 	AudioFormat curFormat;
 	SwResample converter;
 	void flushConverter();
 public:
 	AudioBuffer(AudioFormat fmt);
+	int size()const{return data.empty()?0:data[0].size()/sampleBytes()+converter.samplesCount();}
+	AudioFormat format()const{return m_format;}
+	int sampleBytes()const{return sampleBytes_?sampleBytes_:sampleBytes_=av_get_bytes_per_sample(format().sampleFormat);}
+	
 	void push(const vector<Frame>& frames);
-	int size()const;
-	AudioFormat format()const;
-	int sampleBytes()const;
 	Frame pop(int frameSize);
 	vector<Frame> pop(int frameSize,int count);
 	vector<Frame> flush(int frameSize);
